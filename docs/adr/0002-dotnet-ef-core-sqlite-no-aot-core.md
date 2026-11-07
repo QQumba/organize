@@ -1,0 +1,3 @@
+# .NET with EF Core on SQLite; the Core is not Native AOT
+
+The Core and the desktop/CLI Clients use C#/.NET, with ASP.NET Core minimal APIs and EF Core over a single SQLite file. EF Core does not fully support Native AOT, so the Core uses trimming or ReadyToRun instead, accepting somewhat more memory and slower start-up than a hand-written SQL approach in exchange for productivity. The CLI is Native AOT because it only calls the HTTP API. The web UI is Svelte with TypeScript, served by the Core. Clients are Windows 10/11 only (WPF); the Core uses only portable .NET APIs so it can later run on Linux.
