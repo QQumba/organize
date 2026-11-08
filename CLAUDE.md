@@ -2,7 +2,11 @@
 
 Personal tool for capturing todos and tracking regular tasks, work and personal, in one place. Priorities: minimal-friction capture, ease of use, and speed with low memory use in every part (especially UI).
 
-Vocabulary lives in `GLOSSARY.md`; use those terms exactly. Big decisions are recorded in `docs/adr/`; propose an ADR when a decision is hard to reverse, surprising and a real trade-off.
+Vocabulary lives in `GLOSSARY.md`; use those terms exactly. Big decisions are recorded in `docs/adr/`; propose an ADR when a decision is hard to reverse, surprising and a real trade-off. ADR format: `000N-slug.md`, title states the decision, one short paragraph (decision, why, rejected alternatives); copy the existing ones.
+
+Read when relevant, not every session:
+- `docs/adr/0001`, `0002`: before changing Core hosting, the API boundary, storage or the stack.
+- `docs/linear-workflow.md`: only if your task involves Linear tickets. Otherwise ignore Linear completely.
 
 ## Scope
 
@@ -26,6 +30,18 @@ Vocabulary lives in `GLOSSARY.md`; use those terms exactly. Big decisions are re
 - Test mainly through the Core's HTTP API (integration tests with a temporary SQLite database); light tests for clients; no WPF UI automation.
 - Keep it fast and small: avoid heavy dependencies.
 
+## Definition of done
+
+Acceptance criteria met, tests pass, and any hard-to-reverse decision recorded in an ADR. Keep this file's commands and layout current when you change them.
+
+## Branches
+
+`develop` is the working branch: commit and push directly to it. The user merges into `main` by hand to get a stable version. Never commit to `main`. Pull requests may replace this later.
+
 ## Layout (planned)
 
-`core/`, `cli/`, `desktop/`, `web/`, shared client library. Build and test commands: add once the projects exist.
+`core/`, `cli/`, `desktop/`, `web/`, shared client library.
+
+## Commands
+
+Build and test commands: add once the projects exist (the Core skeleton work fills this in).
