@@ -96,11 +96,13 @@ public class ItemTests
         using var c = core.CreateAuthenticatedClient();
         var a = new Tag { Name = "a" };
         var b = new Tag { Name = "b" };
+        var work = new Category { Name = "Work" };
+        var home = new Category { Name = "Home" };
         var now = DateTime.UtcNow;
         await Seed(core, db => db.Items.AddRange(
-            new Item { Text = "work-ab", Category = "Work", Tags = [a, b], CreatedAt = now },
-            new Item { Text = "work-a", Category = "Work", Tags = [a], CreatedAt = now },
-            new Item { Text = "home-ab", Category = "Home", Tags = [a, b], CreatedAt = now },
+            new Item { Text = "work-ab", Category = work, Tags = [a, b], CreatedAt = now },
+            new Item { Text = "work-a", Category = work, Tags = [a], CreatedAt = now },
+            new Item { Text = "home-ab", Category = home, Tags = [a, b], CreatedAt = now },
             new Item { Text = "plain", CreatedAt = now }));
 
         Assert.Equal(new[] { "work-a", "work-ab" }, (await Inbox(c, "?category=work")).Order());
