@@ -5,6 +5,7 @@ Personal tool for capturing todos and tracking regular tasks, work and personal,
 Vocabulary lives in `GLOSSARY.md`; use those terms exactly. Big decisions are recorded in `docs/adr/`; propose an ADR when a decision is hard to reverse, surprising and a real trade-off. ADR format: `000N-slug.md`, title states the decision, one short paragraph (decision, why, rejected alternatives); copy the existing ones.
 
 Read when relevant, not every session:
+- `docs/architecture.md`: before changing project structure, dependencies, hosting or deployment.
 - `docs/adr/0001`, `0002`: before changing Core hosting, the API boundary, storage or the stack.
 - `docs/linear-workflow.md`: only if your task involves Linear tickets. Otherwise ignore Linear completely.
 
@@ -16,12 +17,7 @@ Read when relevant, not every session:
 
 ## Architecture
 
-- **Core**: sole owner of data and rules. ASP.NET Core minimal API (HTTP/JSON, token auth), EF Core on one SQLite file. Config via file. Runs as a separate background process started at login; it may later move to a remote server. Listens on localhost by default. Uses only portable .NET APIs.
-- **CLI**: .NET Native AOT, thin Client.
-- **Desktop app**: WPF tray app, thin Client. Global shortcut opens a capture popup; minimal list view.
-- **Web UI** (later): Svelte + TypeScript, built to static files served by the Core; types generated from the Core's OpenAPI description.
-- CLI and desktop app share a C# client library for the API. Each Client has its own config file (Core address and secret).
-- Clients are Windows 10/11 only.
+Core (ASP.NET Core minimal API, EF Core on SQLite) owns all data and rules; Clients (CLI, tray app, later web UI) are thin and share a C# client library. Read `docs/architecture.md` before changing project structure, dependencies, hosting or deployment.
 
 ## Rules
 
@@ -46,7 +42,7 @@ Acceptance criteria met, tests pass, and any hard-to-reverse decision recorded i
 - `core/Organizer.Core.Tests/`: xUnit integration tests (`CoreHarness` starts the Core in-process on a temp config and SQLite file).
 - `nuget.config`: nuget.org only (the user-level config points at a missing local source).
 - `dotnet-tools.json`: pins `dotnet-ef`.
-- Planned, not yet created: `cli/`, `desktop/`, `web/`, shared client library.
+- Planned, not yet created: `contracts/`, `client/`, `cli/`, `desktop/`, `web/`, `tests/`. The target layout is in `docs/architecture.md`; the restructure ticket moves the repo there and updates this section and the commands below.
 
 ## Commands
 
