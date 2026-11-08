@@ -75,14 +75,14 @@ public class SearchTests
     {
         using var core = new CoreHarness();
         using var c = core.CreateAuthenticatedClient();
-        await Capture(c, "Купить МОЛОКО", "Не забыть Чек");
-        await Capture(c, "другое");
+        await Capture(c, "Купити МОЛОКО", "Не забути Чек");
+        await Capture(c, "інше");
 
-        Assert.Equal(["Купить МОЛОКО"], (await Search(c, "молоко")).Select(r => r.Text));
-        Assert.Equal(["Купить МОЛОКО"], (await Search(c, "КУПИТЬ")).Select(r => r.Text));
-        Assert.Single(await Search(c, "забыть чек"));
+        Assert.Equal(["Купити МОЛОКО"], (await Search(c, "молоко")).Select(r => r.Text));
+        Assert.Equal(["Купити МОЛОКО"], (await Search(c, "КУПИТИ")).Select(r => r.Text));
+        Assert.Single(await Search(c, "забути чек"));
         Assert.Single(await Search(c, "ЧЕК"));
-        Assert.Empty(await Search(c, "хлеб"));
+        Assert.Empty(await Search(c, "хліб"));
     }
 
     [Fact]
