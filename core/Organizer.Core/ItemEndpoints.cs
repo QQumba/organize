@@ -152,7 +152,8 @@ public static class ItemEndpoints
             return Results.Ok(items.Select(ItemDto.From));
         });
 
-        // Substring match on text and notes, any state. SQLite LIKE is case-insensitive for ASCII only.
+        // Substring match on text and notes, any state. Both sides are lowercased with the Unicode-aware
+        // lower_u (Cyrillic etc.); SQLite's own LIKE only folds ASCII.
         app.MapGet("/search", async (OrganizerDb db, string? q) =>
         {
             var term = q?.Trim();
@@ -160,10 +161,10 @@ public static class ItemEndpoints
             {
                 return Bad("Query is required.", "Search needs a query (?q=...) that is not empty or whitespace.");
             }
-            var pattern = "%" + term.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+            var pattern = "%" + term.ToLowerInvariant().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
             var items = await db.Items
-                .Where(i => EF.Functions.Like(i.Text, pattern, "\\") ||
-                            (i.Notes != null && EF.Functions.Like(i.Notes, pattern, "\\")))
+                .Where(i => EF.Functions.Like(OrganizerDb.LowerU(i.Text), pattern, "\\") ||
+                            EF.Functions.Like(OrganizerDb.LowerU(i.Notes), pattern, "\\"))
                 .Include(i => i.Tags).Include(i => i.Category)
                 .OrderByDescending(i => i.CreatedAt).ThenByDescending(i => i.Id)
                 .ToListAsync();

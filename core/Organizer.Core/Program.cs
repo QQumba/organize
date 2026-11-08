@@ -18,7 +18,8 @@ if (builder.Configuration["urls"] is null)
 {
     builder.WebHost.UseUrls($"http://{config.Address}:{config.Port}");
 }
-builder.Services.AddDbContext<OrganizerDb>(o => o.UseSqlite($"Data Source={config.DatabasePath}"));
+builder.Services.AddDbContext<OrganizerDb>(o => 
+    o.UseSqlite($"Data Source={config.DatabasePath}").AddInterceptors(new UnicodeFunctions()));
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDevApiDocs();

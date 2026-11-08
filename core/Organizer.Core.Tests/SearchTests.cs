@@ -71,6 +71,21 @@ public class SearchTests
     }
 
     [Fact]
+    public async Task Is_case_insensitive_for_cyrillic()
+    {
+        using var core = new CoreHarness();
+        using var c = core.CreateAuthenticatedClient();
+        await Capture(c, "Купить МОЛОКО", "Не забыть Чек");
+        await Capture(c, "другое");
+
+        Assert.Equal(["Купить МОЛОКО"], (await Search(c, "молоко")).Select(r => r.Text));
+        Assert.Equal(["Купить МОЛОКО"], (await Search(c, "КУПИТЬ")).Select(r => r.Text));
+        Assert.Single(await Search(c, "забыть чек"));
+        Assert.Single(await Search(c, "ЧЕК"));
+        Assert.Empty(await Search(c, "хлеб"));
+    }
+
+    [Fact]
     public async Task Wildcard_characters_are_literal()
     {
         using var core = new CoreHarness();
