@@ -19,6 +19,10 @@ if (builder.Configuration["urls"] is null)
     builder.WebHost.UseUrls($"http://{config.Address}:{config.Port}");
 }
 builder.Services.AddDbContext<OrganizerDb>(o => o.UseSqlite($"Data Source={config.DatabasePath}"));
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDevApiDocs();
+}
 
 var app = builder.Build();
 
@@ -37,9 +41,15 @@ using (var scope = app.Services.CreateScope())
     scope.ServiceProvider.GetRequiredService<OrganizerDb>().Database.Migrate();
 }
 
-app.UseTokenAuth(config.Secret);
+app.UseWhen(
+    context => !(app.Environment.IsDevelopment() && DevApiDocs.IsDocsPath(context.Request.Path)),
+    branch => branch.UseTokenAuth(config.Secret));
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapItemEndpoints();
+if (app.Environment.IsDevelopment())
+{
+    app.MapDevApiDocs(config.Secret);
+}
 
 app.Run();
 
