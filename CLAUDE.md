@@ -38,10 +38,20 @@ Acceptance criteria met, tests pass, and any hard-to-reverse decision recorded i
 
 `develop` is the working branch: commit and push directly to it. The user merges into `main` by hand to get a stable version. Never commit to `main`. Pull requests may replace this later.
 
-## Layout (planned)
+## Layout
 
-`core/`, `cli/`, `desktop/`, `web/`, shared client library.
+- `core/Organizer.sln`: solution.
+- `core/Organizer.Core/`: the Core (ASP.NET Core minimal API, EF Core migrations in `Migrations/`).
+- `core/Organizer.Core.Tests/`: xUnit integration tests (`CoreHarness` starts the Core in-process on a temp config and SQLite file).
+- `nuget.config`: nuget.org only (the user-level config points at a missing local source).
+- `dotnet-tools.json`: pins `dotnet-ef`.
+- Planned, not yet created: `cli/`, `desktop/`, `web/`, shared client library.
 
 ## Commands
 
-Build and test commands: add once the projects exist (the Core skeleton work fills this in).
+Run from the repo root, after `dotnet tool restore` once.
+
+- Build: `dotnet build core/Organizer.sln`
+- Test: `dotnet test core/Organizer.sln`
+- Run the Core: `dotnet run --project core/Organizer.Core [-- --config <path>]`. Default config: `%APPDATA%/Organizer/core.json`, created on first start with a random secret. Auth: `Authorization: Bearer <secret>`. Health: `GET /health`.
+- New migration: `dotnet dotnet-ef migrations add <Name> --project core/Organizer.Core --output-dir Migrations -- --config <temp path>/core.json` (the config argument keeps design-time startup out of AppData).
