@@ -146,8 +146,8 @@ public class DatabaseTests
         Assert.NotEqual(a.DatabasePath, b.DatabasePath);
         Assert.True(File.Exists(a.DatabasePath));
         Assert.True(File.Exists(b.DatabasePath));
-        Assert.Equal(1, MigrationCount(a.DatabasePath));
-        Assert.Equal(1, MigrationCount(b.DatabasePath));
+        Assert.Equal(2, MigrationCount(a.DatabasePath));
+        Assert.Equal(2, MigrationCount(b.DatabasePath));
     }
 
     [Fact]

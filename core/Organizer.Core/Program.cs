@@ -39,6 +39,7 @@ using (var scope = app.Services.CreateScope())
 
 app.UseTokenAuth(config.Secret);
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapItemEndpoints();
 
 app.Run();
 
