@@ -152,6 +152,24 @@ public static class ItemEndpoints
             return Results.Ok(items.Select(ItemDto.From));
         });
 
+        // Substring match on text and notes, any state. SQLite LIKE is case-insensitive for ASCII only.
+        app.MapGet("/search", async (OrganizerDb db, string? q) =>
+        {
+            var term = q?.Trim();
+            if (string.IsNullOrEmpty(term))
+            {
+                return Bad("Query is required.", "Search needs a query (?q=...) that is not empty or whitespace.");
+            }
+            var pattern = "%" + term.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+            var items = await db.Items
+                .Where(i => EF.Functions.Like(i.Text, pattern, "\\") ||
+                            (i.Notes != null && EF.Functions.Like(i.Notes, pattern, "\\")))
+                .Include(i => i.Tags).Include(i => i.Category)
+                .OrderByDescending(i => i.CreatedAt).ThenByDescending(i => i.Id)
+                .ToListAsync();
+            return Results.Ok(items.Select(ItemDto.From));
+        });
+
         app.MapPost("/categories", async (CategoryRequest request, OrganizerDb db) =>
         {
             var name = request.Name?.Trim();
