@@ -4,7 +4,15 @@ using Organizer.Core;
 var builder = WebApplication.CreateBuilder(args);
 
 var configPath = CoreConfigLoader.ResolvePath(builder.Configuration["config"]);
-var (config, configCreated) = CoreConfigLoader.LoadOrCreate(configPath);
+var configCreated = CoreConfigLoader.EnsureFile(configPath);
+
+// Layers: appsettings.json (defaults) < core.json (user overrides) < environment < command line.
+builder.Configuration.AddJsonFile(configPath, optional: false, reloadOnChange: false);
+builder.Configuration.AddEnvironmentVariables();
+builder.Configuration.AddCommandLine(args);
+
+var config = CoreConfigLoader.Finalize(builder.Configuration.Get<CoreConfig>() ?? new CoreConfig(), configPath);
+builder.Services.AddSingleton(config);
 
 if (builder.Configuration["urls"] is null)
 {

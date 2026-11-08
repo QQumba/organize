@@ -53,5 +53,5 @@ Run from the repo root, after `dotnet tool restore` once.
 
 - Build: `dotnet build core/Organizer.sln`
 - Test: `dotnet test core/Organizer.sln`
-- Run the Core: `dotnet run --project core/Organizer.Core [-- --config <path>]`. Default config: `%APPDATA%/Organizer/core.json`, created on first start with a random secret. Auth: `Authorization: Bearer <secret>`. Health: `GET /health`.
+- Run the Core: `dotnet run --project core/Organizer.Core [-- --config <path>]`. Settings layer: `core/Organizer.Core/appsettings.json` (defaults, ships with the app) < `core.json` (user overrides; default `%APPDATA%/Organizer/core.json`, created on first start containing only a random secret) < environment variables < command line. Auth: `Authorization: Bearer <secret>`. Health: `GET /health`.
 - New migration: `dotnet dotnet-ef migrations add <Name> --project core/Organizer.Core --output-dir Migrations -- --config <temp path>/core.json` (the config argument keeps design-time startup out of AppData).

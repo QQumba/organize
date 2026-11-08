@@ -65,10 +65,41 @@ public class ConfigTests
         using var client = core.CreateAuthenticatedClient(); // starts the Core
 
         Assert.True(File.Exists(core.ConfigPath));
-        var config = core.ReadConfig();
-        Assert.True(config.GetProperty("Secret").GetString()!.Length >= 43); // 32 bytes, base64url
-        Assert.Equal("127.0.0.1", config.GetProperty("Address").GetString());
+        var file = core.ReadConfigFile();
+        Assert.True(file.GetProperty("Secret").GetString()!.Length >= 43); // 32 bytes, base64url
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/health")).StatusCode);
+    }
+
+    [Fact]
+    public void Created_config_holds_only_the_secret_and_defaults_come_from_appsettings()
+    {
+        using var core = new CoreHarness();
+
+        var file = core.ReadConfigFile();
+
+        Assert.Single(file.EnumerateObject());
+        Assert.Equal("127.0.0.1", core.Effective.Address);
+        Assert.Equal(47821, core.Effective.Port);
+    }
+
+    [Fact]
+    public void Config_file_overrides_appsettings_defaults()
+    {
+        using var core = new CoreHarness();
+        core.WriteConfig("""{ "Secret": "s3cret", "Port": 5555 }""");
+
+        Assert.Equal(5555, core.Effective.Port);            // overridden
+        Assert.Equal("127.0.0.1", core.Effective.Address);  // default kept
+        Assert.Equal("s3cret", core.Effective.Secret);
+    }
+
+    [Fact]
+    public void Config_without_a_secret_refuses_to_start()
+    {
+        using var core = new CoreHarness();
+        core.WriteConfig("""{ "Port": 5555 }""");
+
+        Assert.Throws<InvalidOperationException>(() => core.Server);
     }
 
     [Fact]

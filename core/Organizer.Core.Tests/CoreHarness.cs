@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Organizer.Core.Tests;
 
@@ -28,16 +29,22 @@ public sealed class CoreHarness : WebApplicationFactory<Program>
         builder.UseSetting("config", ConfigPath);
     }
 
-    /// <summary>Reads the config file the Core wrote.</summary>
-    public JsonElement ReadConfig()
+    /// <summary>Pre-writes core.json (user overrides) before the Core starts.</summary>
+    public void WriteConfig(string json) => File.WriteAllText(ConfigPath, json);
+
+    /// <summary>Reads the core.json the Core wrote (user overrides only).</summary>
+    public JsonElement ReadConfigFile()
     {
         _ = Server; // make sure the Core has started
         return JsonDocument.Parse(File.ReadAllText(ConfigPath)).RootElement.Clone();
     }
 
-    public string Secret => ReadConfig().GetProperty("Secret").GetString()!;
+    /// <summary>The merged settings the running Core uses.</summary>
+    public CoreConfig Effective => Services.GetRequiredService<CoreConfig>();
 
-    public string DatabasePath => ReadConfig().GetProperty("DatabasePath").GetString()!;
+    public string Secret => Effective.Secret;
+
+    public string DatabasePath => Effective.DatabasePath;
 
     public HttpClient CreateClient(string? token)
     {
