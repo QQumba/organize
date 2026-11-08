@@ -10,7 +10,7 @@ Read when relevant, not every session:
 
 ## Scope
 
-**v1:** Core, CLI, tray desktop app. Items (text, notes, Area, Tags, optional due date, Important/Urgent flags), states open/done/archived (no deletion), Inbox plus Done and Archive views, text search, backup and restore, one-line Capture from every Client.
+**v1:** Core, CLI, tray desktop app. Items (text, notes, Category, Tags, optional due date, Important/Urgent flags), states open/done/archived (no deletion), Inbox plus Done and Archive views, text search, backup and restore, one-line Capture from every Client.
 
 **Deferred:** web UI, Eisenhower matrix (UI only; fields exist from v1), Recurrence (design TBD), Activities, Reminders/notifications, extra views, phone, sync, multi-user, offline mode. Do not build these unless asked.
 

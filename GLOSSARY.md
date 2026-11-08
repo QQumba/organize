@@ -4,7 +4,7 @@ Personal tool for capturing and tracking todos and recurring tasks across work a
 
 ## Item
 
-The single kind of thing the user records. Starts as just a line of text. May optionally have an Area, Tags and, later, a Recurrence. There are no separate types such as todo or reminder.
+The single kind of thing the user records. Starts as just a line of text. May optionally have a Category, Tags and, later, a Recurrence. There are no separate types such as todo or reminder.
 
 ## Capture
 
@@ -12,7 +12,7 @@ Recording a new Item with minimal friction: one line of text, no required fields
 
 ## Inbox
 
-The main list of all open Items, ordered by soonest date and then newest, with an Area/Tag filter. More distinct views are designed later.
+The main list of all open Items, ordered by soonest date and then newest, with a Category/Tag filter. More distinct views are designed later.
 
 ## Item states
 
@@ -26,9 +26,9 @@ Each Item state has its own view: Inbox (open), Done and Archive (archived). Eac
 
 A way to copy all Core data to separate storage, usable when the Core runs on a remote server.
 
-## Area
+## Category
 
-A user-defined top-level category an Item can belong to (for example Work, Personal). An Item has at most one Area.
+A user-defined top-level grouping an Item can belong to (for example Work, Personal). An Item has at most one Category.
 
 ## Important / Urgent
 
