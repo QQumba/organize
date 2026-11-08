@@ -29,6 +29,7 @@ Read when relevant, not every session:
 - No offline mode: if the Core is unreachable, show a clear error.
 - Test mainly through the Core's HTTP API (integration tests with a temporary SQLite database); light tests for clients; no WPF UI automation.
 - Keep it fast and small: avoid heavy dependencies.
+- User data (Item text, notes, Category and Tag names) must work in English and Ukrainian (Cyrillic): search, matching, uniqueness and sorting must be Unicode-aware, not ASCII-only. The UI stays English only; no localization.
 
 ## Definition of done
 
