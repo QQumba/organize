@@ -130,6 +130,28 @@ public static class ItemEndpoints
             return Results.Ok(ItemDto.From(item));
         });
 
+        app.MapPost("/items/{id:int}/done", (int id, OrganizerDb db) => Transition(id, ItemState.Done, db));
+        app.MapPost("/items/{id:int}/archive", (int id, OrganizerDb db) => Transition(id, ItemState.Archived, db));
+        app.MapPost("/items/{id:int}/restore", (int id, OrganizerDb db) => Transition(id, ItemState.Open, db));
+
+        app.MapGet("/done", async (OrganizerDb db) =>
+        {
+            var items = await db.Items.Where(i => i.State == ItemState.Done)
+                .Include(i => i.Tags).Include(i => i.Category)
+                .OrderByDescending(i => i.DoneAt).ThenByDescending(i => i.Id)
+                .ToListAsync();
+            return Results.Ok(items.Select(ItemDto.From));
+        });
+
+        app.MapGet("/archive", async (OrganizerDb db) =>
+        {
+            var items = await db.Items.Where(i => i.State == ItemState.Archived)
+                .Include(i => i.Tags).Include(i => i.Category)
+                .OrderByDescending(i => i.ArchivedAt).ThenByDescending(i => i.Id)
+                .ToListAsync();
+            return Results.Ok(items.Select(ItemDto.From));
+        });
+
         app.MapPost("/categories", async (CategoryRequest request, OrganizerDb db) =>
         {
             var name = request.Name?.Trim();
@@ -175,6 +197,27 @@ public static class ItemEndpoints
                 .ToListAsync();
             return Results.Ok(items.Select(ItemDto.From));
         });
+    }
+
+    /// <summary>Moves an Item to a state. Moving to the current state is a no-op (200, unchanged).</summary>
+    private static async Task<IResult> Transition(int id, ItemState target, OrganizerDb db)
+    {
+        var item = await db.Items.Include(i => i.Tags).Include(i => i.Category).FirstOrDefaultAsync(i => i.Id == id);
+        if (item is null)
+        {
+            return Results.Problem(
+                title: "Item not found.", detail: $"There is no Item with ID {id}.",
+                statusCode: StatusCodes.Status404NotFound);
+        }
+        if (item.State != target)
+        {
+            var now = DateTime.UtcNow;
+            item.State = target;
+            item.DoneAt = target == ItemState.Done ? now : null;
+            item.ArchivedAt = target == ItemState.Archived ? now : null;
+            await db.SaveChangesAsync();
+        }
+        return Results.Ok(ItemDto.From(item));
     }
 
     /// <summary>True if the property is present; the value is null for an explicit null.</summary>

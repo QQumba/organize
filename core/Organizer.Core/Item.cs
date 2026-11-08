@@ -15,6 +15,8 @@ public sealed class Item
     public bool Urgent { get; set; }
     public ItemState State { get; set; } = ItemState.Open;
     public DateTime CreatedAt { get; set; }
+    public DateTime? DoneAt { get; set; }
+    public DateTime? ArchivedAt { get; set; }
 }
 
 public sealed class Category
