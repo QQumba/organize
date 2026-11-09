@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="Organizer.TestSupport" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Organizer.TestSupport\Organizer.TestSupport.csproj" />
+    <ProjectReference Include="..\..\client\Organizer.Client\Organizer.Client.csproj" />
+  </ItemGroup>
+
+</Project>

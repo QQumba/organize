@@ -1,20 +1,17 @@
 using System.Globalization;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
+using Organizer.Contracts;
 
 namespace Organizer.Core;
-
-public sealed record CaptureRequest(string? Text);
 
 public sealed record CategoryRequest(string? Name);
 
 public sealed record CategoryDto(int Id, string Name);
 
-public sealed record ItemDto(
-    int Id, string Text, string? Notes, string? Category, string[] Tags,
-    DateOnly? DueDate, bool Important, bool Urgent, string State, DateTime CreatedAt)
+public static class ItemMapping
 {
-    public static ItemDto From(Item i) => new(
+    public static ItemDto ToDto(this Item i) => new(
         i.Id, i.Text, i.Notes, i.Category?.Name, i.Tags.Select(t => t.Name).Order().ToArray(),
         i.DueDate, i.Important, i.Urgent, i.State.ToString().ToLowerInvariant(), i.CreatedAt);
 }
@@ -39,7 +36,7 @@ public static class ItemEndpoints
             var item = new Item { Text = text, CreatedAt = DateTime.UtcNow };
             db.Items.Add(item);
             await db.SaveChangesAsync();
-            return Results.Created($"/items/{item.Id}", ItemDto.From(item));
+            return Results.Created($"/items/{item.Id}", item.ToDto());
         });
 
         app.MapPatch("/items/{id:int}", async (int id, JsonObject body, OrganizerDb db) =>
@@ -127,7 +124,7 @@ public static class ItemEndpoints
             }
 
             await db.SaveChangesAsync();
-            return Results.Ok(ItemDto.From(item));
+            return Results.Ok(item.ToDto());
         });
 
         app.MapPost("/items/{id:int}/done", (int id, OrganizerDb db) => Transition(id, ItemState.Done, db));
@@ -140,7 +137,7 @@ public static class ItemEndpoints
                 .Include(i => i.Tags).Include(i => i.Category)
                 .OrderByDescending(i => i.DoneAt).ThenByDescending(i => i.Id)
                 .ToListAsync();
-            return Results.Ok(items.Select(ItemDto.From));
+            return Results.Ok(items.Select(ItemMapping.ToDto));
         });
 
         app.MapGet("/archive", async (OrganizerDb db) =>
@@ -149,7 +146,7 @@ public static class ItemEndpoints
                 .Include(i => i.Tags).Include(i => i.Category)
                 .OrderByDescending(i => i.ArchivedAt).ThenByDescending(i => i.Id)
                 .ToListAsync();
-            return Results.Ok(items.Select(ItemDto.From));
+            return Results.Ok(items.Select(ItemMapping.ToDto));
         });
 
         // Substring match on text and notes, any state. Both sides are lowercased with the Unicode-aware
@@ -168,7 +165,7 @@ public static class ItemEndpoints
                 .Include(i => i.Tags).Include(i => i.Category)
                 .OrderByDescending(i => i.CreatedAt).ThenByDescending(i => i.Id)
                 .ToListAsync();
-            return Results.Ok(items.Select(ItemDto.From));
+            return Results.Ok(items.Select(ItemMapping.ToDto));
         });
 
         app.MapPost("/categories", async (CategoryRequest request, OrganizerDb db) =>
@@ -214,7 +211,7 @@ public static class ItemEndpoints
                 .ThenByDescending(i => i.CreatedAt)
                 .ThenByDescending(i => i.Id)
                 .ToListAsync();
-            return Results.Ok(items.Select(ItemDto.From));
+            return Results.Ok(items.Select(ItemMapping.ToDto));
         });
     }
 
@@ -236,7 +233,7 @@ public static class ItemEndpoints
             item.ArchivedAt = target == ItemState.Archived ? now : null;
             await db.SaveChangesAsync();
         }
-        return Results.Ok(ItemDto.From(item));
+        return Results.Ok(item.ToDto());
     }
 
     /// <summary>True if the property is present; the value is null for an explicit null.</summary>

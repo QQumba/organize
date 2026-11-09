@@ -2,7 +2,7 @@
 
 Read this before changing project structure, dependencies, hosting or deployment. Rules that apply to every change (no business logic in Clients, no offline mode, and so on) stay in `CLAUDE.md`. The reasons behind single decisions are in `docs/adr/`.
 
-The layout below is the target. `client/`, `cli/`, `desktop/` and `web/` do not exist yet; `CLAUDE.md` Layout lists what exists now.
+The layout below is the target. `desktop/` and `web/` do not exist yet; `CLAUDE.md` Layout lists what exists now.
 
 ## Components
 
