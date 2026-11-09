@@ -1,11 +1,12 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
+using Organizer.Core;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Organizer.Core.Tests;
+namespace Organizer.TestSupport;
 
 /// <summary>
 /// Starts the Core in-process with a temporary config file and SQLite database.

@@ -37,19 +37,21 @@ Acceptance criteria met, tests pass, and any hard-to-reverse decision recorded i
 
 ## Layout
 
-- `core/Organizer.sln`: solution.
+- `Organizer.sln`: the one solution, at the repo root. `Directory.Build.props` (shared settings) and `Directory.Packages.props` (central package versions) sit next to it; each project sets its own target framework.
 - `core/Organizer.Core/`: the Core (ASP.NET Core minimal API, EF Core migrations in `Migrations/`).
-- `core/Organizer.Core.Tests/`: xUnit integration tests (`CoreHarness` starts the Core in-process on a temp config and SQLite file).
+- `contracts/Organizer.Contracts/`: request and response types shared by the Core and the client library, no dependencies. Empty for now; the client library ticket (ATL-13) moves the DTOs it needs out of the Core.
+- `tests/Organizer.Core.Tests/`: xUnit integration tests, including the test that the Core references only Contracts.
+- `tests/Organizer.TestSupport/`: `CoreHarness` starts the Core in-process on a temp config and SQLite file.
 - `nuget.config`: nuget.org only (the user-level config points at a missing local source).
 - `dotnet-tools.json`: pins `dotnet-ef`.
-- Planned, not yet created: `contracts/`, `client/`, `cli/`, `desktop/`, `web/`, `tests/`. The target layout is in `docs/architecture.md`; the restructure ticket moves the repo there and updates this section and the commands below.
+- Planned, not yet created: `client/`, `cli/`, `desktop/`, `web/`. The target layout is in `docs/architecture.md`.
 
 ## Commands
 
 Run from the repo root, after `dotnet tool restore` once.
 
-- Build: `dotnet build core/Organizer.sln`
-- Test: `dotnet test core/Organizer.sln`
+- Build: `dotnet build Organizer.sln`
+- Test: `dotnet test Organizer.sln`
 - Run the Core: `dotnet run --project core/Organizer.Core [-- --config <path>]`. Settings layer: `core/Organizer.Core/appsettings.json` (defaults, ships with the app) < `core.json` (user overrides; default `%APPDATA%/Organizer/core.json`, created on first start containing only a random secret) < environment variables < command line. Auth: `Authorization: Bearer <secret>`. Health: `GET /health`.
 - Run the Core for development: `dotnet run --project core/Organizer.Core --launch-profile Dev` (or the `Dev` profile in the IDE). Uses a throwaway config and database in the git-ignored `.dev/` folder at the repo root, not your real `%APPDATA%` one. The profile deliberately sets no `applicationUrl`, so address and port still come from the config. In Development only, the Core also serves the OpenAPI description at `/openapi/v1.json` and the Scalar UI at `/scalar` (both skip token auth; the dev secret is prefilled, so "Test request" works). `DevApiDocs.cs` holds this.
 - New migration: `dotnet dotnet-ef migrations add <Name> --project core/Organizer.Core --output-dir Migrations -- --config <temp path>/core.json` (the config argument keeps design-time startup out of AppData).
