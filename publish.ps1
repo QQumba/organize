@@ -1,5 +1,5 @@
 # Builds the deliverables into dist/ (git-ignored). Grows as other deliverables appear.
-# Needs the Visual Studio "Desktop development with C++" workload for Native AOT.
+# The CLI needs the Visual Studio "Desktop development with C++" workload for Native AOT.
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $dist = Join-Path $root 'dist'
@@ -16,3 +16,12 @@ if ($LASTEXITCODE -ne 0) { throw "CLI publish failed" }
 
 Get-ChildItem $cliOut -Filter *.pdb | Remove-Item
 Write-Host "CLI: $cliOut\org.exe"
+
+# Desktop (tray app): framework-dependent, ReadyToRun (WPF does not support Native AOT). Needs the .NET 10 Desktop Runtime.
+$desktopOut = Join-Path $dist 'desktop'
+if (Test-Path $desktopOut) { Remove-Item $desktopOut -Recurse -Force }
+dotnet publish (Join-Path $root 'desktop/Organizer.Desktop') -c Release -r win-x64 --self-contained false -p:PublishReadyToRun=true -p:DebugType=none -p:DebugSymbols=false -o $desktopOut
+if ($LASTEXITCODE -ne 0) { throw "Desktop publish failed" }
+
+Get-ChildItem $desktopOut -Filter *.pdb | Remove-Item
+Write-Host "Desktop: $desktopOut\Organizer.Desktop.exe"

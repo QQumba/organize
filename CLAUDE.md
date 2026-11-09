@@ -47,8 +47,10 @@ Acceptance criteria met, tests pass, and any hard-to-reverse decision recorded i
 - `tests/Organizer.TestSupport/`: `CoreHarness` starts the Core in-process on a temp config and SQLite file.
 - `nuget.config`: nuget.org only (the user-level config points at a missing local source).
 - `dotnet-tools.json`: pins `dotnet-ef`.
-- `publish.ps1`: builds the CLI (Native AOT, win-x64) into the git-ignored `dist/`; needs the Visual Studio C++ workload. It grows with each deliverable.
-- Planned, not yet created: `desktop/`, `web/`. The target layout is in `docs/architecture.md`.
+- `publish.ps1`: builds the CLI (Native AOT, win-x64) into `dist/cli/` and the tray app (framework-dependent, ReadyToRun, win-x64; needs the .NET 10 Desktop Runtime) into `dist/desktop/`; `dist/` is git-ignored. The CLI needs the Visual Studio C++ workload. It grows with each deliverable.
+- `desktop/Organizer.Desktop/`: the tray app (WPF, `net10.0-windows`, WinForms `NotifyIcon`). `PopupWindow` (Capture popup with the Inbox list) is a thin view over `CapturePopupModel`; `TrayApp` holds the tray icon and the global hotkey (`Hotkey`). Config: `%APPDATA%/Organizer/desktop.json` (`{ "Address", "Secret", "Hotkey" }`, `Hotkey` optional, default `Alt+Q`; not auto-created), `--config <path>` overrides. Start at login is not part of it yet (ATL-15).
+- `tests/Organizer.Desktop.Tests/`: light tests of the Desktop's plain classes (hotkey parsing, popup state); no WPF UI automation.
+- Planned, not yet created: `web/`. The target layout is in `docs/architecture.md`.
 
 ## Commands
 
@@ -57,6 +59,7 @@ Run from the repo root, after `dotnet tool restore` once.
 - Build: `dotnet build Organizer.sln`
 - Test: `dotnet test Organizer.sln`
 - CLI: `powershell ./publish.ps1`, then `dist/cli/org.exe add <text>`, `ls [--category <name>] [--tag <name>]...`, `done <id>`.
+- Tray app: after `publish.ps1`, run `dist/desktop/Organizer.Desktop.exe [--config <path>]`. Alt+Q (or the `Hotkey` config key) opens the Capture popup; Enter captures, Esc dismisses. Startup errors show as the tray tooltip and one balloon.
 - Run the Core: `dotnet run --project core/Organizer.Core [-- --config <path>]`. Settings layer: `core/Organizer.Core/appsettings.json` (defaults, ships with the app) < `core.json` (user overrides; default `%APPDATA%/Organizer/core.json`, created on first start containing only a random secret) < environment variables < command line. Auth: `Authorization: Bearer <secret>`. Health: `GET /health`.
 - Run the Core for development: `dotnet run --project core/Organizer.Core --launch-profile Dev` (or the `Dev` profile in the IDE). Uses a throwaway config and database in the git-ignored `.dev/` folder at the repo root, not your real `%APPDATA%` one. The profile deliberately sets no `applicationUrl`, so address and port still come from the config. In Development only, the Core also serves the OpenAPI description at `/openapi/v1.json` and the Scalar UI at `/scalar` (both skip token auth; the dev secret is prefilled, so "Test request" works). `DevApiDocs.cs` holds this.
 - New migration: `dotnet dotnet-ef migrations add <Name> --project core/Organizer.Core --output-dir Migrations -- --config <temp path>/core.json` (the config argument keeps design-time startup out of AppData).

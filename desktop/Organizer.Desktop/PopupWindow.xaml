@@ -1,0 +1,24 @@
+<Window x:Class="Organizer.Desktop.PopupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Organizer" Width="520" SizeToContent="Height" MaxHeight="460"
+        WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True"
+        Background="White" FontFamily="Segoe UI" FontSize="15">
+    <Border BorderBrush="#FF8A8A8A" BorderThickness="1" Padding="10">
+        <StackPanel>
+            <TextBox x:Name="Input" Padding="6,5" AcceptsReturn="False" />
+            <TextBlock x:Name="ErrorText" Foreground="#FFB00020" TextWrapping="Wrap" Margin="2,8,2,0" Visibility="Collapsed" />
+            <ListBox x:Name="List" Margin="0,8,0,0" MaxHeight="340" BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox Focusable="False" VerticalAlignment="Center" Margin="0,0,10,0" Click="OnDoneClick" />
+                            <TextBlock Text="{Binding Line}" TextTrimming="CharacterEllipsis" MaxWidth="440" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+    </Border>
+</Window>
