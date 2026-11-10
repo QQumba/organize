@@ -5,8 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 var configPath = CoreConfigLoader.ResolvePath(builder.Configuration["config"]);
 
-// The Core runs hidden (no console), so everything it logs also goes to core-*.log beside core.json.
-using var logWriter = new LogFileWriter(Path.GetDirectoryName(configPath)!);
+// The Core runs hidden (no console), so everything it logs also goes to logs/core-*.log beside core.json.
+using var logWriter = new LogFileWriter(Path.Combine(Path.GetDirectoryName(configPath)!, "logs"));
 builder.Logging.AddProvider(new FileLoggerProvider(logWriter));
 
 try

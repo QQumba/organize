@@ -140,7 +140,7 @@ public class CoreLogIntegrationTests
             core.WriteConfig("{ \"Secret\": \"s\" }"); // pre-written, so the Core logs "Using" rather than "Created"
             _ = core.Server;
             folder = core.Folder;
-            var log = Assert.Single(Directory.GetFiles(folder, "core-*.log"));
+            var log = Assert.Single(Directory.GetFiles(Path.Combine(folder, "logs"), "core-*.log"));
             using var s = new FileStream(log, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
             Assert.Contains("Using config file", new StreamReader(s).ReadToEnd());
         }
@@ -183,7 +183,7 @@ public sealed partial class FailedStartTests : IDisposable
         }
         p.WaitForExit();
 
-        var logs = Directory.GetFiles(_folder, "core-*.log");
+        var logs = Directory.GetFiles(Path.Combine(_folder, "logs"), "core-*.log");
         var log = string.Concat(logs.Order(StringComparer.Ordinal).Select(File.ReadAllText));
         return (p.ExitCode, log);
     }
