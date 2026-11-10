@@ -19,15 +19,20 @@ public sealed class CoreHarness : WebApplicationFactory<Program>
 
     public string ConfigPath { get; }
 
-    public CoreHarness(string configFileName = "core.json")
+    private readonly string _environment;
+
+    /// <param name="environment">Hosting environment; the test host's own default is Development.</param>
+    public CoreHarness(string configFileName = "core.json", string environment = "Production")
     {
         ConfigPath = Path.Combine(Folder, configFileName);
+        _environment = environment;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // Same configuration key that `--config <path>` sets on the command line.
         builder.UseSetting("config", ConfigPath);
+        builder.UseEnvironment(_environment);
     }
 
     /// <summary>Pre-writes core.json (user overrides) before the Core starts.</summary>

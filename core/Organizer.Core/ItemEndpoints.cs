@@ -9,6 +9,8 @@ public sealed record CategoryRequest(string? Name);
 
 public sealed record CategoryDto(int Id, string Name);
 
+public sealed record HealthDto(string Status);
+
 public static class ItemMapping
 {
     public static ItemDto ToDto(this Item i) => new(
@@ -37,7 +39,10 @@ public static class ItemEndpoints
             db.Items.Add(item);
             await db.SaveChangesAsync();
             return Results.Created($"/items/{item.Id}", item.ToDto());
-        });
+        })
+        .WithSummary("Capture an Item from one line of text.")
+        .Produces<ItemDto>(StatusCodes.Status201Created)
+        .ProducesProblem(StatusCodes.Status400BadRequest);
 
         app.MapPatch("/items/{id:int}", async (int id, JsonObject body, OrganizerDb db) =>
         {
@@ -125,11 +130,21 @@ public static class ItemEndpoints
 
             await db.SaveChangesAsync();
             return Results.Ok(item.ToDto());
-        });
+        })
+        .WithSummary("Edit an Item.")
+        .WithDescription("Send only the fields to change. An omitted field is unchanged; an explicit null clears it " +
+                         "(text cannot be cleared). category must name an existing Category; tags replaces the Item's Tags; " +
+                         "dueDate is yyyy-MM-dd.")
+        .Produces<ItemDto>()
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound);
 
-        app.MapPost("/items/{id:int}/done", (int id, OrganizerDb db) => Transition(id, ItemState.Done, db));
-        app.MapPost("/items/{id:int}/archive", (int id, OrganizerDb db) => Transition(id, ItemState.Archived, db));
-        app.MapPost("/items/{id:int}/restore", (int id, OrganizerDb db) => Transition(id, ItemState.Open, db));
+        app.MapPost("/items/{id:int}/done", (int id, OrganizerDb db) => Transition(id, ItemState.Done, db))
+            .WithSummary("Mark an Item done.").WithTransitionDocs();
+        app.MapPost("/items/{id:int}/archive", (int id, OrganizerDb db) => Transition(id, ItemState.Archived, db))
+            .WithSummary("Archive an Item.").WithTransitionDocs();
+        app.MapPost("/items/{id:int}/restore", (int id, OrganizerDb db) => Transition(id, ItemState.Open, db))
+            .WithSummary("Move an Item back to open.").WithTransitionDocs();
 
         app.MapGet("/done", async (OrganizerDb db) =>
         {
@@ -138,7 +153,9 @@ public static class ItemEndpoints
                 .OrderByDescending(i => i.DoneAt).ThenByDescending(i => i.Id)
                 .ToListAsync();
             return Results.Ok(items.Select(ItemMapping.ToDto));
-        });
+        })
+        .WithSummary("Done Items, most recently done first.")
+        .Produces<ItemDto[]>();
 
         app.MapGet("/archive", async (OrganizerDb db) =>
         {
@@ -147,7 +164,9 @@ public static class ItemEndpoints
                 .OrderByDescending(i => i.ArchivedAt).ThenByDescending(i => i.Id)
                 .ToListAsync();
             return Results.Ok(items.Select(ItemMapping.ToDto));
-        });
+        })
+        .WithSummary("Archived Items, most recently archived first.")
+        .Produces<ItemDto[]>();
 
         // Substring match on text and notes, any state. Both sides are lowercased with the Unicode-aware
         // lower_u (Cyrillic etc.); SQLite's own LIKE only folds ASCII.
@@ -166,7 +185,10 @@ public static class ItemEndpoints
                 .OrderByDescending(i => i.CreatedAt).ThenByDescending(i => i.Id)
                 .ToListAsync();
             return Results.Ok(items.Select(ItemMapping.ToDto));
-        });
+        })
+        .WithSummary("Find Items by text or notes, in any state.")
+        .Produces<ItemDto[]>()
+        .ProducesProblem(StatusCodes.Status400BadRequest);
 
         app.MapPost("/categories", async (CategoryRequest request, OrganizerDb db) =>
         {
@@ -185,10 +207,16 @@ public static class ItemEndpoints
             db.Categories.Add(category);
             await db.SaveChangesAsync();
             return Results.Created($"/categories/{category.Id}", new CategoryDto(category.Id, category.Name));
-        });
+        })
+        .WithSummary("Create a Category.")
+        .Produces<CategoryDto>(StatusCodes.Status201Created)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         app.MapGet("/categories", async (OrganizerDb db) =>
-            Results.Ok(await db.Categories.OrderBy(c => c.Name).Select(c => new CategoryDto(c.Id, c.Name)).ToListAsync()));
+            Results.Ok(await db.Categories.OrderBy(c => c.Name).Select(c => new CategoryDto(c.Id, c.Name)).ToListAsync()))
+            .WithSummary("All Categories, by name.")
+            .Produces<CategoryDto[]>();
 
         app.MapGet("/inbox", async (OrganizerDb db, string? category, string[] tag) =>
         {
@@ -212,8 +240,15 @@ public static class ItemEndpoints
                 .ThenByDescending(i => i.Id)
                 .ToListAsync();
             return Results.Ok(items.Select(ItemMapping.ToDto));
-        });
+        })
+        .WithSummary("Open Items, due soonest first.")
+        .Produces<ItemDto[]>();
     }
+
+    private static RouteHandlerBuilder WithTransitionDocs(this RouteHandlerBuilder builder) =>
+        builder.WithDescription("Moving an Item to the state it is already in changes nothing and returns it.")
+            .Produces<ItemDto>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
     /// <summary>Moves an Item to a state. Moving to the current state is a no-op (200, unchanged).</summary>
     private static async Task<IResult> Transition(int id, ItemState target, OrganizerDb db)

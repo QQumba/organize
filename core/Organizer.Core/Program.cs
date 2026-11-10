@@ -20,10 +20,7 @@ if (builder.Configuration["urls"] is null)
 }
 builder.Services.AddDbContext<OrganizerDb>(o => 
     o.UseSqlite($"Data Source={config.DatabasePath}").AddInterceptors(new UnicodeFunctions()));
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddDevApiDocs();
-}
+builder.Services.AddApiDescription();
 
 var app = builder.Build();
 
@@ -45,11 +42,13 @@ using (var scope = app.Services.CreateScope())
 app.UseWhen(
     context => !(app.Environment.IsDevelopment() && DevApiDocs.IsDocsPath(context.Request.Path)),
     branch => branch.UseTokenAuth(config.Secret));
-app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapGet("/health", () => Results.Ok(new HealthDto("ok")))
+    .Produces<HealthDto>();
 app.MapItemEndpoints();
+app.MapApiDescription();
 if (app.Environment.IsDevelopment())
 {
-    app.MapDevApiDocs(config.Secret);
+    app.MapDevScalar(config.Secret);
 }
 
 app.Run();
