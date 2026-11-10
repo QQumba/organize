@@ -39,7 +39,7 @@ Acceptance criteria met, tests pass, and any hard-to-reverse decision recorded i
 ## Layout
 
 - `Organizer.sln`: the one solution, at the repo root. `Directory.Build.props` (shared settings) and `Directory.Packages.props` (central package versions) sit next to it; each project sets its own target framework.
-- `core/Organizer.Core/`: the Core (ASP.NET Core minimal API, EF Core migrations in `Migrations/`).
+- `core/Organizer.Core/`: the Core (ASP.NET Core minimal API, EF Core migrations in `Migrations/`). It also logs to `core-<yyyyMMddTHHmmss>.log` files beside `core.json` (`FileLog.cs`; 1 MB each, newest 7 kept), including failed starts.
 - `contracts/Organizer.Contracts/`: request and response types shared by the Core and the client library, no dependencies. Holds `CaptureRequest` and `ItemDto`; other DTOs still live in the Core until a Client needs them.
 - `client/Organizer.Client/`: `OrganizerClient` (capture, inbox, done), `ClientConfig` loader, `OrganizerException`. AOT-compatible, source-generated JSON.
 - `cli/Organizer.Cli/`: the `org` exe (Native AOT). `CliApp` holds parsing, output and exit codes (0 ok, 1 error, 2 usage). Config: `%APPDATA%/Organizer/cli.json` (`{ "Address", "Secret" }`, not auto-created), `--config <path>` overrides.

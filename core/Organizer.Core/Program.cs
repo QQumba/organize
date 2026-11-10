@@ -4,6 +4,25 @@ using Organizer.Core;
 var builder = WebApplication.CreateBuilder(args);
 
 var configPath = CoreConfigLoader.ResolvePath(builder.Configuration["config"]);
+
+// The Core runs hidden (no console), so everything it logs also goes to core-*.log beside core.json.
+using var logWriter = new LogFileWriter(Path.GetDirectoryName(configPath)!);
+builder.Logging.AddProvider(new FileLoggerProvider(logWriter));
+
+try
+{
+    return Run();
+}
+catch (Exception ex) when (ex is not HostAbortedException) // HostAbortedException: EF tooling and test hosts stop Main on purpose
+{
+    // Failures before the host exists (bad core.json, missing Secret) have no logger yet; the host's own
+    // logger may be gone too, so write the reason straight to the file.
+    logWriter.Write(FileLoggerProvider.Format("Crit", "Program", "The Core failed to start or crashed.", ex));
+    return 1;
+}
+
+int Run()
+{
 var configCreated = CoreConfigLoader.EnsureFile(configPath);
 
 // Layers: appsettings.json (defaults) < core.json (user overrides) < environment < command line.
@@ -52,5 +71,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+return 0;
+}
 
 public partial class Program;

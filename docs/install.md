@@ -55,10 +55,13 @@ Removes the task, the `Run` value, the `PATH` entry and `%LOCALAPPDATA%\Organize
 | Programs | `%LOCALAPPDATA%\Organizer\{core,cli,desktop}` |
 | Configs | `%APPDATA%\Organizer\core.json`, `cli.json`, `desktop.json` |
 | Database | `%APPDATA%\Organizer\organizer.db` (default) |
+| Logs | `%APPDATA%\Organizer\core-<yyyyMMddTHHmmss>.log` (1 MB each, newest 7 kept) |
 
 ## The Core does not start
 
-There is no log file yet. Run it in a console to see the error:
+Look in the newest `%APPDATA%\Organizer\core-*.log` first (names sort chronologically, so the newest is last). A failed start is logged with its reason, for example a port already in use or a `core.json` without a `Secret`.
+
+If there is no log (the failure happens before any file can be written, such as a missing runtime), run it in a console to see the error:
 
 ```powershell
 cd $env:LOCALAPPDATA\Organizer\core
@@ -92,3 +95,4 @@ No UI automation, so check by hand:
 7. `uninstall.ps1`: no `Organizer Core` task, no `Organizer` Run value, no `PATH` entry, no `%LOCALAPPDATA%\Organizer`; `%APPDATA%\Organizer` is kept.
 8. `uninstall.ps1 -RemoveData` also removes `%APPDATA%\Organizer`.
 9. With the installed copy running, `dev.ps1` starts a second Core and tray app; Alt+Q and Alt+Shift+Q each open their own popup; `org --config .dev/cli.json ls` shows only dev data.
+10. Occupy the Core's port (for example `$l = [Net.Sockets.TcpListener]::new('127.0.0.1', 47821); $l.Start()`), start the Core, and read the reason ("address already in use") in the newest `%APPDATA%\Organizer\core-*.log`.
