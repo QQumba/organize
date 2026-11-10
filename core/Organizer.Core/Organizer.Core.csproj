@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <!-- publish.ps1 sets CoreWinExe so the published exe has no console window; dotnet run keeps its console. -->
+    <OutputType Condition="'$(CoreWinExe)' == 'true'">WinExe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>

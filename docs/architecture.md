@@ -2,7 +2,7 @@
 
 Read this before changing project structure, dependencies, hosting or deployment. Rules that apply to every change (no business logic in Clients, no offline mode, and so on) stay in `CLAUDE.md`. The reasons behind single decisions are in `docs/adr/`.
 
-The layout below is the target. `desktop/` and `web/` do not exist yet; `CLAUDE.md` Layout lists what exists now.
+The layout below is the target. `web/` does not exist yet; `CLAUDE.md` Layout lists what exists now.
 
 ## Components
 
@@ -28,7 +28,9 @@ cli/        Organizer.Cli
 desktop/    Organizer.Desktop
 web/        Svelte app (own package.json)
 tests/      Core.Tests, Client.Tests, Cli.Tests, TestSupport (CoreHarness)
-docs/       adr/, architecture.md, linear-workflow.md
+docs/       adr/, architecture.md, install.md, linear-workflow.md
+scripts/    config.ps1 (shared by install.ps1 and dev.ps1)
+*.ps1       publish, install, uninstall, dev (repo root)
 ```
 
 Target frameworks are set per project: plain `net10.0` for everything except the desktop app, which is `net10.0-windows`. Anything the Core or the shared projects use must not need the Windows target.
@@ -50,7 +52,7 @@ Contracts and the client library set `IsAotCompatible=true`, so the AOT and trim
 
 - Core builds and publishes never need Node. The web UI is added by a separate step that builds `web/` and copies `web/dist` into the Core's publish output. The Core serves `wwwroot` only if that folder exists.
 - One script, `publish.ps1` at the repo root, builds the deliverables into the git-ignored `dist/`: Core (framework-dependent), CLI (Native AOT single exe), Desktop. It grows as each deliverable appears.
-- Install is a manual copy to `%LOCALAPPDATA%/Organizer/` plus adding the CLI folder to PATH. There is no installer in v1.
+- Install is `install.ps1`: it copies `dist/` to `%LOCALAPPDATA%/Organizer/{core,cli,desktop}`, registers the Core's logon task, starts the tray app through the `HKCU` `Run` key, adds the CLI folder to the user PATH and creates missing config files in `%APPDATA%/Organizer`. `uninstall.ps1` reverses it. There is no installer package in v1. `dev.ps1` runs a throwaway copy from source. See `docs/install.md`.
 - Locally the Core runs as a Task Scheduler "at logon" task for the current user: no admin, hidden window, restart on failure, and `%APPDATA%` is the right config location. It is not a Windows Service, which would run as another account. The tray app never starts the Core.
 - A remote Core is a separate deployment story, to be designed when needed. Nothing in the layout above blocks it.
 

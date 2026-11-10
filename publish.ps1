@@ -1,4 +1,5 @@
-# Builds the deliverables into dist/ (git-ignored). Grows as other deliverables appear.
+# Builds the deliverables into dist/ (git-ignored): core, cli, desktop. Grows as other deliverables appear.
+# Prerequisites to run the result: ASP.NET Core 10 runtime (Core), .NET 10 Desktop Runtime (tray app).
 # The CLI needs the Visual Studio "Desktop development with C++" workload for Native AOT.
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
@@ -7,6 +8,15 @@ $dist = Join-Path $root 'dist'
 # The Native AOT linker step runs vswhere.exe, which the Visual Studio installer does not put on PATH.
 $installer = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer'
 if ((Test-Path $installer) -and ($env:PATH -notlike "*$installer*")) { $env:PATH = "$installer;$env:PATH" }
+
+# Core: framework-dependent, WinExe (no console window when started by the logon task). Needs the ASP.NET Core 10 runtime.
+$coreOut = Join-Path $dist 'core'
+if (Test-Path $coreOut) { Remove-Item $coreOut -Recurse -Force }
+dotnet publish (Join-Path $root 'core/Organizer.Core') -c Release -r win-x64 --self-contained false -p:CoreWinExe=true -p:DebugType=none -p:DebugSymbols=false -o $coreOut
+if ($LASTEXITCODE -ne 0) { throw "Core publish failed" }
+
+Get-ChildItem $coreOut -Filter *.pdb | Remove-Item
+Write-Host "Core: $coreOut\Organizer.Core.exe"
 
 # CLI: Native AOT single exe (org.exe)
 $cliOut = Join-Path $dist 'cli'

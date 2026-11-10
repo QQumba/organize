@@ -9,8 +9,8 @@ public static class Program
         var i = Array.IndexOf(args, "--config");
         var configPath = i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
 
-        // Single instance: a second launch exits quietly.
-        using var mutex = new Mutex(true, @"Local\Organizer.Desktop", out var first);
+        // Single instance per config file: a second launch with the same config exits quietly.
+        using var mutex = new Mutex(true, InstanceName.MutexName(configPath), out var first);
         if (!first) return;
 
         var app = new System.Windows.Application { ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown };
