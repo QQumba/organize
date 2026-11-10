@@ -8,7 +8,7 @@ Read when relevant, not every session:
 - `docs/architecture.md`: before changing project structure, dependencies, hosting or deployment.
 - `docs/adr/0001`, `0002`: before changing Core hosting, the API boundary, storage or the stack.
 - `docs/linear-workflow.md`: only if your task involves Linear tickets. Otherwise ignore Linear completely.
-- `README.md`: for human developers only (how to run the dev environment). Do not read it unless asked to.
+- `README.md`: for human developers only. Do not read it unless asked to.
 
 ## Scope
 
