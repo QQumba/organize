@@ -39,6 +39,23 @@ public class OrganizerClientTests
     }
 
     [Fact]
+    public async Task Inbox_filters_by_Ukrainian_category_and_tag_in_another_case()
+    {
+        using var core = new CoreHarness();
+        using var http = core.CreateAuthenticatedClient();
+        using var client = new OrganizerClient(http);
+        var item = await client.CaptureAsync("полагодити");
+        await client.CaptureAsync("інше");
+        (await http.PostAsJsonAsync("/categories", new { name = "Дім" })).EnsureSuccessStatusCode();
+        (await http.PatchAsJsonAsync($"/items/{item.Id}", new { category = "Дім", tags = new[] { "Робота" } })).EnsureSuccessStatusCode();
+
+        Assert.Equal(new[] { item.Id }, (await client.InboxAsync("ДІМ")).Select(i => i.Id));
+        Assert.Equal(new[] { item.Id }, (await client.InboxAsync("дім")).Select(i => i.Id));
+        Assert.Equal(new[] { item.Id }, (await client.InboxAsync(tags: ["РОБОТА"])).Select(i => i.Id));
+        Assert.Equal(new[] { item.Id }, (await client.InboxAsync("дім", ["робота"])).Select(i => i.Id));
+    }
+
+    [Fact]
     public async Task Wrong_secret_gives_a_clear_error()
     {
         using var core = new CoreHarness();

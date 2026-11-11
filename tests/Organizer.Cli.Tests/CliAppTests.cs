@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using Organizer.Client;
 
 namespace Organizer.Cli.Tests;
@@ -63,6 +64,29 @@ public class CliAppTests : IDisposable
         var r = await Run(_ => new OrganizerClient(core.CreateClient("wrong")), "add", "hi", "--config", ConfigPath);
         Assert.Equal(CliApp.Failure, r.Code);
         Assert.Contains("rejected the secret", r.Err);
+    }
+
+    [Fact]
+    public async Task Ls_filters_by_Ukrainian_category_and_tag_in_another_case()
+    {
+        using var core = new CoreHarness();
+        using var http = core.CreateAuthenticatedClient();
+        File.WriteAllText(ConfigPath, """{ "Address": "http://x", "Secret": "x" }""");
+        OrganizerClient Factory(ClientConfig _) => new(core.CreateAuthenticatedClient());
+
+        await Run(Factory, "add", "полагодити", "--config", ConfigPath);
+        await Run(Factory, "add", "інше", "--config", ConfigPath);
+        (await http.PostAsJsonAsync("/categories", new { name = "Дім" })).EnsureSuccessStatusCode();
+        (await http.PatchAsJsonAsync("/items/1", new { category = "Дім", tags = new[] { "Робота" } })).EnsureSuccessStatusCode();
+
+        var byCategory = await Run(Factory, "ls", "--category", "ДІМ", "--config", ConfigPath);
+        Assert.Equal(0, byCategory.Code);
+        Assert.Contains("полагодити", byCategory.Out);
+        Assert.DoesNotContain("інше", byCategory.Out);
+
+        var byTag = await Run(Factory, "ls", "--tag", "РОБОТА", "--config", ConfigPath);
+        Assert.Contains("полагодити", byTag.Out);
+        Assert.DoesNotContain("інше", byTag.Out);
     }
 
     [Fact]

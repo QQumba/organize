@@ -6,7 +6,7 @@ Windows 10/11, per user, no admin. Plain folders plus scripts; there is no insta
 
 - .NET 10 SDK (to build).
 - Running the result: the **ASP.NET Core 10 runtime** (Core) and the **.NET 10 Desktop Runtime** (tray app).
-- Building the CLI (Native AOT): the Visual Studio "Desktop development with C++" workload. The linker runs `vswhere.exe`, which the Visual Studio installer does not put on `PATH`; `publish.ps1` adds its folder for its own run, so nothing to do unless you publish the CLI by hand.
+- Building the CLI (Native AOT): the Visual Studio "Desktop development with C++" workload. The publish may print "'vswhere.exe' is not recognized" (it is not on `PATH`); this is harmless, the publish still finds Visual Studio and succeeds.
 
 ## Build
 
