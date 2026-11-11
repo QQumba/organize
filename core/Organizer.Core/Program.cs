@@ -61,11 +61,13 @@ int Run()
     }
 
     app.UseWhen(
-        context => !(app.Environment.IsDevelopment() && DevApiDocs.IsDocsPath(context.Request.Path)),
+        context => context.Request.Path.StartsWithSegments("/api")
+            && !(app.Environment.IsDevelopment() && DevApiDocs.IsDocsPath(context.Request.Path)),
         branch => branch.UseTokenAuth(config.Secret));
-    app.MapGet("/health", () => Results.Ok(new HealthDto("ok")))
+    var api = app.MapGroup("/api");
+    api.MapGet("/health", () => Results.Ok(new HealthDto("ok")))
         .Produces<HealthDto>();
-    app.MapItemEndpoints();
+    api.MapItemEndpoints();
     app.MapApiDescription();
     if (app.Environment.IsDevelopment())
     {

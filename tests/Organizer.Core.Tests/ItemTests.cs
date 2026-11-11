@@ -9,14 +9,14 @@ public class ItemTests
 {
     private static async Task<JsonElement> Capture(HttpClient c, string text)
     {
-        var r = await c.PostAsJsonAsync("/items", new { text });
+        var r = await c.PostAsJsonAsync("/api/items", new { text });
         Assert.Equal(HttpStatusCode.Created, r.StatusCode);
         return await r.Content.ReadFromJsonAsync<JsonElement>();
     }
 
     private static async Task<string[]> Inbox(HttpClient c, string query = "")
     {
-        var arr = await c.GetFromJsonAsync<JsonElement>("/inbox" + query);
+        var arr = await c.GetFromJsonAsync<JsonElement>("/api/inbox" + query);
         return arr.EnumerateArray().Select(e => e.GetProperty("text").GetString()!).ToArray();
     }
 
@@ -51,7 +51,7 @@ public class ItemTests
         using var core = new CoreHarness();
         using var c = core.CreateAuthenticatedClient();
 
-        var r = await c.PostAsJsonAsync("/items", new { text });
+        var r = await c.PostAsJsonAsync("/api/items", new { text });
 
         Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
         var body = await r.Content.ReadFromJsonAsync<JsonElement>();
@@ -118,7 +118,22 @@ public class ItemTests
         using var core = new CoreHarness();
         using var c = core.CreateClient(token: null);
 
-        Assert.Equal(HttpStatusCode.Unauthorized, (await c.GetAsync("/inbox")).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await c.PostAsJsonAsync("/items", new { text = "x" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await c.GetAsync("/api/inbox")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await c.PostAsJsonAsync("/api/items", new { text = "x" })).StatusCode);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(true)]
+    public async Task Old_unprefixed_paths_are_404_and_unknown_api_paths_are_404(bool? withToken)
+    {
+        using var core = new CoreHarness();
+        using var c = withToken is null ? core.CreateClient(token: null) : core.CreateAuthenticatedClient();
+
+        Assert.Equal(HttpStatusCode.NotFound, (await c.GetAsync("/inbox")).StatusCode);
+        if (withToken is true)
+        {
+            Assert.Equal(HttpStatusCode.NotFound, (await c.GetAsync("/api/nope")).StatusCode);
+        }
     }
 }

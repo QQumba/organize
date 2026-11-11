@@ -8,19 +8,19 @@ public class SearchTests
 {
     private static async Task<int> Capture(HttpClient c, string text, string? notes = null)
     {
-        var r = await c.PostAsJsonAsync("/items", new { text });
+        var r = await c.PostAsJsonAsync("/api/items", new { text });
         Assert.Equal(HttpStatusCode.Created, r.StatusCode);
         var id = (await r.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt32();
         if (notes is not null)
         {
-            Assert.Equal(HttpStatusCode.OK, (await c.PatchAsJsonAsync($"/items/{id}", new { notes })).StatusCode);
+            Assert.Equal(HttpStatusCode.OK, (await c.PatchAsJsonAsync($"/api/items/{id}", new { notes })).StatusCode);
         }
         return id;
     }
 
     private static async Task<(string Text, string State)[]> Search(HttpClient c, string q)
     {
-        var arr = await c.GetFromJsonAsync<JsonElement>("/search?q=" + Uri.EscapeDataString(q));
+        var arr = await c.GetFromJsonAsync<JsonElement>("/api/search?q=" + Uri.EscapeDataString(q));
         return arr.EnumerateArray()
             .Select(e => (e.GetProperty("text").GetString()!, e.GetProperty("state").GetString()!)).ToArray();
     }
@@ -48,8 +48,8 @@ public class SearchTests
         await Capture(c, "task open");
         var done = await Capture(c, "task done");
         var arch = await Capture(c, "task arch");
-        await c.PostAsync($"/items/{done}/done", null);
-        await c.PostAsync($"/items/{arch}/archive", null);
+        await c.PostAsync($"/api/items/{done}/done", null);
+        await c.PostAsync($"/api/items/{arch}/archive", null);
 
         var results = await Search(c, "task");
         Assert.Equal(3, results.Length);
@@ -106,7 +106,7 @@ public class SearchTests
         using var core = new CoreHarness();
         using var c = core.CreateAuthenticatedClient();
 
-        Assert.Equal(HttpStatusCode.BadRequest, (await c.GetAsync("/search?q=" + q)).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await c.GetAsync("/search")).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await c.GetAsync("/api/search?q=" + q)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await c.GetAsync("/api/search")).StatusCode);
     }
 }

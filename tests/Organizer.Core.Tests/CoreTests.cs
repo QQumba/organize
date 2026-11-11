@@ -13,7 +13,7 @@ public class HealthTests
         using var core = new CoreHarness();
         using var client = core.CreateAuthenticatedClient();
 
-        var response = await client.GetAsync("/health");
+        var response = await client.GetAsync("/api/health");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -26,7 +26,7 @@ public class HealthTests
         using var core = new CoreHarness();
         using var client = core.CreateClient("not-the-secret");
 
-        var response = await client.GetAsync("/health");
+        var response = await client.GetAsync("/api/health");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -37,7 +37,7 @@ public class HealthTests
         using var core = new CoreHarness();
         using var client = core.CreateClient(token: null);
 
-        var response = await client.GetAsync("/health");
+        var response = await client.GetAsync("/api/health");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -48,7 +48,7 @@ public class HealthTests
         using var core = new CoreHarness();
         using var client = core.CreateAuthenticatedClient();
 
-        var body = await client.GetStringAsync("/health");
+        var body = await client.GetStringAsync("/api/health");
 
         Assert.DoesNotContain(core.Secret, body);
     }
@@ -67,7 +67,7 @@ public class ConfigTests
         Assert.True(File.Exists(core.ConfigPath));
         var file = core.ReadConfigFile();
         Assert.True(file.GetProperty("Secret").GetString()!.Length >= 43); // 32 bytes, base64url
-        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/health")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/health")).StatusCode);
     }
 
     [Fact]
@@ -117,7 +117,7 @@ public class ConfigTests
         using var core = new CoreHarness("custom-name.json");
 
         using var client = core.CreateAuthenticatedClient();
-        await client.GetAsync("/health");
+        await client.GetAsync("/api/health");
 
         Assert.True(File.Exists(Path.Combine(core.Folder, "custom-name.json")));
         // Default database path is next to the config file.
@@ -140,8 +140,8 @@ public class DatabaseTests
     {
         using var a = new CoreHarness();
         using var b = new CoreHarness();
-        await a.CreateAuthenticatedClient().GetAsync("/health");
-        await b.CreateAuthenticatedClient().GetAsync("/health");
+        await a.CreateAuthenticatedClient().GetAsync("/api/health");
+        await b.CreateAuthenticatedClient().GetAsync("/api/health");
 
         Assert.NotEqual(a.DatabasePath, b.DatabasePath);
         Assert.True(File.Exists(a.DatabasePath));
@@ -156,7 +156,7 @@ public class DatabaseTests
         string folder;
         using (var core = new CoreHarness())
         {
-            await core.CreateAuthenticatedClient().GetAsync("/health");
+            await core.CreateAuthenticatedClient().GetAsync("/api/health");
             folder = core.Folder;
             Assert.True(Directory.Exists(folder));
         }

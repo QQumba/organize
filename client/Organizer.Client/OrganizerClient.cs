@@ -26,14 +26,14 @@ public sealed class OrganizerClient : IDisposable
 
     /// <summary>Capture: creates an open Item from one line of text.</summary>
     public Task<ItemDto> CaptureAsync(string text, CancellationToken ct = default) =>
-        SendAsync(() => _http.PostAsJsonAsync("/items", new CaptureRequest(text), ClientJsonContext.Default.CaptureRequest, ct),
+        SendAsync(() => _http.PostAsJsonAsync("/api/items", new CaptureRequest(text), ClientJsonContext.Default.CaptureRequest, ct),
             ClientJsonContext.Default.ItemDto, ct);
 
     /// <summary>The Inbox (open Items), optionally filtered by Category and Tags.</summary>
     public async Task<IReadOnlyList<ItemDto>> InboxAsync(
         string? category = null, IEnumerable<string>? tags = null, CancellationToken ct = default)
     {
-        var url = new StringBuilder("/inbox");
+        var url = new StringBuilder("/api/inbox");
         var sep = '?';
         if (!string.IsNullOrWhiteSpace(category))
         {
@@ -51,7 +51,7 @@ public sealed class OrganizerClient : IDisposable
 
     /// <summary>Marks an Item done. Already done is not an error.</summary>
     public Task<ItemDto> DoneAsync(int id, CancellationToken ct = default) =>
-        SendAsync(() => _http.PostAsync($"/items/{id}/done", content: null, ct), ClientJsonContext.Default.ItemDto, ct);
+        SendAsync(() => _http.PostAsync($"/api/items/{id}/done", content: null, ct), ClientJsonContext.Default.ItemDto, ct);
 
     private async Task<T> SendAsync<T>(
         Func<Task<HttpResponseMessage>> send, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> info, CancellationToken ct)

@@ -8,15 +8,15 @@ namespace Organizer.Core.Tests;
 public class UnicodeNameTests
 {
     private static async Task<HttpResponseMessage> PostCategory(HttpClient c, string name) =>
-        await c.PostAsJsonAsync("/categories", new { name });
+        await c.PostAsJsonAsync("/api/categories", new { name });
 
     private static async Task<int> Capture(HttpClient c, string text) =>
-        (await (await c.PostAsJsonAsync("/items", new { text })).Content.ReadFromJsonAsync<JsonElement>())
+        (await (await c.PostAsJsonAsync("/api/items", new { text })).Content.ReadFromJsonAsync<JsonElement>())
         .GetProperty("id").GetInt32();
 
     private static async Task<JsonElement> Patch(HttpClient c, int id, string json)
     {
-        var r = await c.PatchAsync($"/items/{id}", new StringContent(json, Encoding.UTF8, "application/json"));
+        var r = await c.PatchAsync($"/api/items/{id}", new StringContent(json, Encoding.UTF8, "application/json"));
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
         return await r.Content.ReadFromJsonAsync<JsonElement>();
     }
@@ -25,7 +25,7 @@ public class UnicodeNameTests
         item.GetProperty("tags").EnumerateArray().Select(t => t.GetString()!).ToArray();
 
     private static async Task<JsonElement[]> Inbox(HttpClient c, string query) =>
-        (await c.GetFromJsonAsync<JsonElement>("/inbox" + query)).EnumerateArray().ToArray();
+        (await c.GetFromJsonAsync<JsonElement>("/api/inbox" + query)).EnumerateArray().ToArray();
 
     [Fact]
     public async Task Duplicate_Cyrillic_category_in_another_case_is_409()
@@ -80,7 +80,7 @@ public class UnicodeNameTests
             Assert.Equal(HttpStatusCode.Created, (await PostCategory(c, n)).StatusCode);
         }
 
-        var listed = (await c.GetFromJsonAsync<JsonElement>("/categories")).EnumerateArray()
+        var listed = (await c.GetFromJsonAsync<JsonElement>("/api/categories")).EnumerateArray()
             .Select(e => e.GetProperty("name").GetString()!).ToArray();
 
         // г < ґ < д, е < є < ж, и < і < ї < й

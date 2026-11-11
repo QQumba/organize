@@ -31,8 +31,8 @@ public class OrganizerClientTests
         using var client = new OrganizerClient(http);
         var item = await client.CaptureAsync("tagged");
         await client.CaptureAsync("plain");
-        (await http.PostAsJsonAsync("/categories", new { name = "Work" })).EnsureSuccessStatusCode();
-        (await http.PatchAsJsonAsync($"/items/{item.Id}", new { category = "Work", tags = new[] { "a", "b" } })).EnsureSuccessStatusCode();
+        (await http.PostAsJsonAsync("/api/categories", new { name = "Work" })).EnsureSuccessStatusCode();
+        (await http.PatchAsJsonAsync($"/api/items/{item.Id}", new { category = "Work", tags = new[] { "a", "b" } })).EnsureSuccessStatusCode();
 
         Assert.Equal(new[] { item.Id }, (await client.InboxAsync("Work", ["a", "b"])).Select(i => i.Id));
         Assert.Empty(await client.InboxAsync("Work", ["missing"]));
@@ -46,8 +46,8 @@ public class OrganizerClientTests
         using var client = new OrganizerClient(http);
         var item = await client.CaptureAsync("полагодити");
         await client.CaptureAsync("інше");
-        (await http.PostAsJsonAsync("/categories", new { name = "Дім" })).EnsureSuccessStatusCode();
-        (await http.PatchAsJsonAsync($"/items/{item.Id}", new { category = "Дім", tags = new[] { "Робота" } })).EnsureSuccessStatusCode();
+        (await http.PostAsJsonAsync("/api/categories", new { name = "Дім" })).EnsureSuccessStatusCode();
+        (await http.PatchAsJsonAsync($"/api/items/{item.Id}", new { category = "Дім", tags = new[] { "Робота" } })).EnsureSuccessStatusCode();
 
         Assert.Equal(new[] { item.Id }, (await client.InboxAsync("ДІМ")).Select(i => i.Id));
         Assert.Equal(new[] { item.Id }, (await client.InboxAsync("дім")).Select(i => i.Id));

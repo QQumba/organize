@@ -10,7 +10,7 @@ namespace Organizer.Core.Tests;
 
 public class OpenApiTests
 {
-    private const string Url = "/openapi/v1.json";
+    private const string Url = "/api/openapi/v1.json";
 
     [Fact]
     public async Task Description_is_served_outside_Development_and_parses_as_OpenAPI()
@@ -58,7 +58,7 @@ public class OpenApiTests
 
         var mapped = core.Services.GetRequiredService<EndpointDataSource>().Endpoints
             .OfType<RouteEndpoint>()
-            .Where(e => e.RoutePattern.RawText is { } raw && !raw.StartsWith("/openapi") && !raw.StartsWith("/scalar"))
+            .Where(e => e.RoutePattern.RawText is { } raw && !raw.StartsWith("/api/openapi") && !raw.StartsWith("/scalar"))
             .SelectMany(e => (e.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods ?? [])
                 .Select(m => (Method: m.ToLowerInvariant(), Path: StripConstraints(e.RoutePattern.RawText!))))
             .Distinct()
@@ -86,12 +86,12 @@ public class OpenApiTests
 
         var paths = doc.GetProperty("paths");
         foreach (var (path, method, status) in new[]
-                 { ("/items", "post", "201"), ("/items/{id}", "patch", "200"), ("/items/{id}/done", "post", "200") })
+                 { ("/api/items", "post", "201"), ("/api/items/{id}", "patch", "200"), ("/api/items/{id}/done", "post", "200") })
         {
             Assert.Equal("#/components/schemas/ItemDto", SchemaRef(paths, path, method, status));
         }
-        Assert.Equal("#/components/schemas/ItemDto", ItemsRef(paths, "/inbox"));
-        Assert.Equal("#/components/schemas/ProblemDetails", SchemaRef(paths, "/items/{id}", "patch", "404"));
+        Assert.Equal("#/components/schemas/ItemDto", ItemsRef(paths, "/api/inbox"));
+        Assert.Equal("#/components/schemas/ProblemDetails", SchemaRef(paths, "/api/items/{id}", "patch", "404"));
     }
 
     [Fact]
@@ -105,12 +105,12 @@ public class OpenApiTests
         Assert.Equal(
             new[] { "text", "notes", "category", "tags", "dueDate", "important", "urgent" }.Order(),
             props.EnumerateObject().Select(p => p.Name).Order());
-        var patch = doc.GetProperty("paths").GetProperty("/items/{id}").GetProperty("patch");
+        var patch = doc.GetProperty("paths").GetProperty("/api/items/{id}").GetProperty("patch");
         Assert.Contains("explicit null clears", patch.GetProperty("description").GetString());
 
-        var search = doc.GetProperty("paths").GetProperty("/search").GetProperty("get").GetProperty("parameters");
+        var search = doc.GetProperty("paths").GetProperty("/api/search").GetProperty("get").GetProperty("parameters");
         Assert.True(search[0].GetProperty("required").GetBoolean());
-        var inbox = doc.GetProperty("paths").GetProperty("/inbox").GetProperty("get").GetProperty("parameters");
+        var inbox = doc.GetProperty("paths").GetProperty("/api/inbox").GetProperty("get").GetProperty("parameters");
         Assert.Equal(
             new[] { "category", "tag" },
             inbox.EnumerateArray().Select(p => p.GetProperty("name").GetString()!).Order());

@@ -10,21 +10,21 @@ public class ItemStateTests
 {
     private static async Task<int> Capture(HttpClient c, string text)
     {
-        var r = await c.PostAsJsonAsync("/items", new { text });
+        var r = await c.PostAsJsonAsync("/api/items", new { text });
         Assert.Equal(HttpStatusCode.Created, r.StatusCode);
         return (await r.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt32();
     }
 
     private static async Task<JsonElement> Post(HttpClient c, int id, string action)
     {
-        var r = await c.PostAsync($"/items/{id}/{action}", null);
+        var r = await c.PostAsync($"/api/items/{id}/{action}", null);
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
         return await r.Content.ReadFromJsonAsync<JsonElement>();
     }
 
     private static async Task<string[]> View(HttpClient c, string view)
     {
-        var arr = await c.GetFromJsonAsync<JsonElement>("/" + view);
+        var arr = await c.GetFromJsonAsync<JsonElement>("/api/" + view);
         return arr.EnumerateArray().Select(e => e.GetProperty("text").GetString()!).ToArray();
     }
 
@@ -131,7 +131,7 @@ public class ItemStateTests
         using var core = new CoreHarness();
         using var c = core.CreateAuthenticatedClient();
 
-        Assert.Equal(HttpStatusCode.NotFound, (await c.PostAsync($"/items/999/{action}", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await c.PostAsync($"/api/items/999/{action}", null)).StatusCode);
     }
 
     [Fact]
@@ -145,6 +145,6 @@ public class ItemStateTests
             .SelectMany(s => s.Endpoints).OfType<RouteEndpoint>()
             .SelectMany(e => e.Metadata.OfType<HttpMethodMetadata>()).SelectMany(m => m.HttpMethods);
         Assert.DoesNotContain("DELETE", methods, StringComparer.OrdinalIgnoreCase);
-        Assert.Equal(HttpStatusCode.MethodNotAllowed, (await c.DeleteAsync($"/items/{id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.MethodNotAllowed, (await c.DeleteAsync($"/api/items/{id}")).StatusCode);
     }
 }

@@ -6,7 +6,7 @@ The layout below is the target. `web/` does not exist yet; `CLAUDE.md` Layout li
 
 ## Components
 
-- **Core**: sole owner of data and rules. ASP.NET Core minimal API (HTTP/JSON, token auth), EF Core on one SQLite file. Config via file. Runs as a separate background process started at login, and may later move to a remote server. Listens on localhost by default. Uses only portable .NET APIs. Not Native AOT (ADR 0002).
+- **Core**: sole owner of data and rules. ASP.NET Core minimal API (HTTP/JSON, every endpoint under `/api/`, bearer-token auth on `/api/*` only), EF Core on one SQLite file. Config via file. Runs as a separate background process started at login, and may later move to a remote server. Listens on localhost by default. Uses only portable .NET APIs. Not Native AOT (ADR 0002).
 - **Contracts**: the API's request and response types (DTOs) and nothing else. No dependencies. Shared by the Core and the client library, so the API has one source of truth.
 - **Client library**: typed C# wrapper over the Core API. Holds no business logic or storage. Shared by the CLI and the desktop app.
 - **CLI** (`org`): .NET Native AOT, thin Client over the client library.

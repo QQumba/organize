@@ -9,13 +9,13 @@ public class EditItemTests
 {
     private static async Task<JsonElement> Capture(HttpClient c, string text)
     {
-        var r = await c.PostAsJsonAsync("/items", new { text });
+        var r = await c.PostAsJsonAsync("/api/items", new { text });
         Assert.Equal(HttpStatusCode.Created, r.StatusCode);
         return await r.Content.ReadFromJsonAsync<JsonElement>();
     }
 
     private static async Task<HttpResponseMessage> Patch(HttpClient c, int id, string json) =>
-        await c.PatchAsync($"/items/{id}", new StringContent(json, Encoding.UTF8, "application/json"));
+        await c.PatchAsync($"/api/items/{id}", new StringContent(json, Encoding.UTF8, "application/json"));
 
     private static async Task<JsonElement> PatchOk(HttpClient c, int id, string json)
     {
@@ -25,10 +25,10 @@ public class EditItemTests
     }
 
     private static async Task Category(HttpClient c, string name) =>
-        Assert.Equal(HttpStatusCode.Created, (await c.PostAsJsonAsync("/categories", new { name })).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await c.PostAsJsonAsync("/api/categories", new { name })).StatusCode);
 
     private static async Task<JsonElement[]> InboxItems(HttpClient c, string query = "") =>
-        (await c.GetFromJsonAsync<JsonElement>("/inbox" + query)).EnumerateArray().ToArray();
+        (await c.GetFromJsonAsync<JsonElement>("/api/inbox" + query)).EnumerateArray().ToArray();
 
     private static string[] Tags(JsonElement item) =>
         item.GetProperty("tags").EnumerateArray().Select(t => t.GetString()!).ToArray();
@@ -144,11 +144,11 @@ public class EditItemTests
         await Category(c, "Work");
         await Category(c, "Home");
 
-        var list = await c.GetFromJsonAsync<JsonElement>("/categories");
+        var list = await c.GetFromJsonAsync<JsonElement>("/api/categories");
         Assert.Equal(["Home", "Work"], list.EnumerateArray().Select(e => e.GetProperty("name").GetString()!).ToArray());
 
-        Assert.Equal(HttpStatusCode.Conflict, (await c.PostAsJsonAsync("/categories", new { name = "work" })).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await c.PostAsJsonAsync("/categories", new { name = "  " })).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, (await c.PostAsJsonAsync("/api/categories", new { name = "work" })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await c.PostAsJsonAsync("/api/categories", new { name = "  " })).StatusCode);
     }
 
     [Fact]
@@ -193,6 +193,6 @@ public class EditItemTests
         using var c = core.CreateClient(token: null);
 
         Assert.Equal(HttpStatusCode.Unauthorized, (await Patch(c, 1, "{}")).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await c.GetAsync("/categories")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await c.GetAsync("/api/categories")).StatusCode);
     }
 }

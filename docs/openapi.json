@@ -5,7 +5,7 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/health": {
+    "/api/health": {
       "get": {
         "tags": [
           "Organizer.Core"
@@ -24,7 +24,7 @@
         }
       }
     },
-    "/items": {
+    "/api/items": {
       "post": {
         "tags": [
           "Organizer.Core"
@@ -64,7 +64,7 @@
         }
       }
     },
-    "/items/{id}": {
+    "/api/items/{id}": {
       "patch": {
         "tags": [
           "Organizer.Core"
@@ -127,7 +127,7 @@
         }
       }
     },
-    "/items/{id}/done": {
+    "/api/items/{id}/done": {
       "post": {
         "tags": [
           "Organizer.Core"
@@ -170,7 +170,7 @@
         }
       }
     },
-    "/items/{id}/archive": {
+    "/api/items/{id}/archive": {
       "post": {
         "tags": [
           "Organizer.Core"
@@ -213,7 +213,7 @@
         }
       }
     },
-    "/items/{id}/restore": {
+    "/api/items/{id}/restore": {
       "post": {
         "tags": [
           "Organizer.Core"
@@ -256,7 +256,7 @@
         }
       }
     },
-    "/done": {
+    "/api/done": {
       "get": {
         "tags": [
           "Organizer.Core"
@@ -279,7 +279,7 @@
         }
       }
     },
-    "/archive": {
+    "/api/archive": {
       "get": {
         "tags": [
           "Organizer.Core"
@@ -302,7 +302,7 @@
         }
       }
     },
-    "/search": {
+    "/api/search": {
       "get": {
         "tags": [
           "Organizer.Core"
@@ -346,7 +346,7 @@
         }
       }
     },
-    "/categories": {
+    "/api/categories": {
       "post": {
         "tags": [
           "Organizer.Core"
@@ -417,7 +417,7 @@
         }
       }
     },
-    "/inbox": {
+    "/api/inbox": {
       "get": {
         "tags": [
           "Organizer.Core"

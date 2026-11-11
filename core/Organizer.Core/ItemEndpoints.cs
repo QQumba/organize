@@ -38,7 +38,7 @@ public static class ItemEndpoints
             var item = new Item { Text = text, CreatedAt = DateTime.UtcNow };
             db.Items.Add(item);
             await db.SaveChangesAsync();
-            return Results.Created($"/items/{item.Id}", item.ToDto());
+            return Results.Created($"/api/items/{item.Id}", item.ToDto());
         })
         .WithSummary("Capture an Item from one line of text.")
         .Produces<ItemDto>(StatusCodes.Status201Created)
@@ -206,7 +206,7 @@ public static class ItemEndpoints
             var category = new Category { Name = name };
             db.Categories.Add(category);
             await db.SaveChangesAsync();
-            return Results.Created($"/categories/{category.Id}", new CategoryDto(category.Id, category.Name));
+            return Results.Created($"/api/categories/{category.Id}", new CategoryDto(category.Id, category.Name));
         })
         .WithSummary("Create a Category.")
         .Produces<CategoryDto>(StatusCodes.Status201Created)

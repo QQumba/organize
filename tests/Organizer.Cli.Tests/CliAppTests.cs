@@ -76,8 +76,8 @@ public class CliAppTests : IDisposable
 
         await Run(Factory, "add", "полагодити", "--config", ConfigPath);
         await Run(Factory, "add", "інше", "--config", ConfigPath);
-        (await http.PostAsJsonAsync("/categories", new { name = "Дім" })).EnsureSuccessStatusCode();
-        (await http.PatchAsJsonAsync("/items/1", new { category = "Дім", tags = new[] { "Робота" } })).EnsureSuccessStatusCode();
+        (await http.PostAsJsonAsync("/api/categories", new { name = "Дім" })).EnsureSuccessStatusCode();
+        (await http.PatchAsJsonAsync("/api/items/1", new { category = "Дім", tags = new[] { "Робота" } })).EnsureSuccessStatusCode();
 
         var byCategory = await Run(Factory, "ls", "--category", "ДІМ", "--config", ConfigPath);
         Assert.Equal(0, byCategory.Code);

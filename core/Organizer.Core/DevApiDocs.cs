@@ -12,6 +12,7 @@ namespace Organizer.Core;
 public static class DevApiDocs
 {
     private const string BearerScheme = "Bearer";
+    private const string OpenApiRoute = "/api/openapi/{documentName}.json";
     private const string EditSchema = "EditItemRequest";
 
     // Hand-written: every field optional, and null is allowed (it clears the field).
@@ -73,18 +74,18 @@ public static class DevApiDocs
 
         switch (path)
         {
-            case "inbox":
+            case "api/inbox":
                 Describe("category", "Only Items in this Category.");
                 Describe("tag", "Only Items with this Tag. Repeat the parameter to require several Tags.");
                 break;
-            case "items/{id:int}" when operation.RequestBody?.Content is { } content:
+            case "api/items/{id:int}" when operation.RequestBody?.Content is { } content:
                 // The handler binds a JsonObject (opaque schema); describe the editable fields instead.
                 foreach (var media in content.Values)
                 {
                     media.Schema = new OpenApiSchemaReference(EditSchema);
                 }
                 break;
-            case "search":
+            case "api/search":
                 Describe("q", "Text to find in Item text and notes (case-insensitive, Unicode-aware). Required, not blank.", required: true);
                 break;
         }
@@ -93,14 +94,15 @@ public static class DevApiDocs
 
     /// <summary>True for the documentation routes, which skip token auth in Development (the API itself still requires it).</summary>
     public static bool IsDocsPath(PathString path) =>
-        path.StartsWithSegments("/openapi") || path.StartsWithSegments("/scalar");
+        path.StartsWithSegments("/api/openapi") || path.StartsWithSegments("/scalar");
 
-    public static void MapApiDescription(this WebApplication app) => app.MapOpenApi();
+    public static void MapApiDescription(this WebApplication app) => app.MapOpenApi(OpenApiRoute);
 
     public static void MapDevScalar(this WebApplication app, string secret) =>
         // Dev secret is throwaway, so prefill it: "Try it" works without pasting the token.
         app.MapScalarApiReference(o => o
             .WithTitle("Organizer Core")
+            .WithOpenApiRoutePattern(OpenApiRoute)
             .AddPreferredSecuritySchemes(BearerScheme)
             .AddHttpAuthentication(BearerScheme, auth => auth.Token = secret));
 }
