@@ -50,7 +50,7 @@ Contracts and the client library set `IsAotCompatible=true`, so the AOT and trim
 
 ## Build, publish and run
 
-- Core builds and publishes never need Node. The web UI is added by a separate step that builds `web/` and copies `web/dist` into the Core's publish output. The Core serves `wwwroot` only if that folder exists.
+- Core builds and publishes never need Node. The web UI is added by a separate step that builds `web/` and copies `web/build` into the Core's publish output. The Core serves `wwwroot` only if that folder exists.
 - One script, `publish.ps1` at the repo root, builds the deliverables into the git-ignored `dist/`: Core (framework-dependent), CLI (Native AOT single exe), Desktop. It grows as each deliverable appears.
 - Install is `install.ps1`: it copies `dist/` to `%LOCALAPPDATA%/Organizer/{core,cli,desktop}`, registers the Core's logon task, starts the tray app through the `HKCU` `Run` key, adds the CLI folder to the user PATH and creates missing config files in `%APPDATA%/Organizer`. `uninstall.ps1` reverses it. There is no installer package in v1. `dev.ps1` runs a throwaway copy from source. See `docs/install.md`.
 - Locally the Core runs as a Task Scheduler "at logon" task for the current user: no admin, hidden window, restart on failure, and `%APPDATA%` is the right config location. It is not a Windows Service, which would run as another account. The tray app never starts the Core.
