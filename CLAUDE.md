@@ -12,9 +12,9 @@ Read when relevant, not every session:
 
 ## Scope
 
-**v1:** Core, CLI, tray desktop app. Items (text, notes, Category, Tags, optional due date, Important/Urgent flags), states open/done/archived (no deletion), Inbox plus Done and Archive views, text search, backup and restore, one-line Capture from every Client.
+**v1:** Core, CLI, tray desktop app, web UI. Items (text, notes, Category, Tags, optional due date, Important/Urgent flags), states open/done/archived (no deletion), Inbox plus Done and Archive views, text search, backup and restore, one-line Capture from every Client.
 
-**Deferred:** web UI, Eisenhower matrix (UI only; fields exist from v1), Recurrence (design TBD), Activities, Reminders/notifications, extra views, phone, sync, multi-user, offline mode. Do not build these unless asked.
+**Deferred:** Eisenhower matrix (UI only; fields exist from v1), Recurrence (design TBD), Activities, Reminders/notifications, extra views, phone, sync, multi-user, offline mode. Do not build these unless asked.
 
 ## Architecture
 
@@ -53,7 +53,7 @@ Acceptance criteria met, tests pass, and any hard-to-reverse decision recorded i
 - `desktop/Organizer.Desktop/`: the tray app (WPF, `net10.0-windows`, WinForms `NotifyIcon`). `PopupWindow` (Capture popup with the Inbox list) is a thin view over `CapturePopupModel`; `TrayApp` holds the tray icon and the global hotkey (`Hotkey`). Config: `%APPDATA%/Organizer/desktop.json` (`{ "Address", "Secret", "Hotkey" }`, `Hotkey` optional, default `Alt+Q`; not auto-created), `--config <path>` overrides.
 - `tests/Organizer.Desktop.Tests/`: light tests of the Desktop's plain classes (hotkey parsing, popup state); no WPF UI automation.
 - `install.ps1`, `uninstall.ps1`, `dev.ps1`: per-user install (Task Scheduler logon task for the Core, `Run` key for the tray app, CLI on the user PATH), uninstall, and a throwaway dev run. `scripts/config.ps1` is the config-file function they share. Details in `docs/install.md`.
-- Planned, not yet created: `web/`. The target layout is in `docs/architecture.md`.
+- `web/`: the web UI (SvelteKit 3 SPA, Svelte 5, TypeScript, Tailwind v4; npm, Node 24+; not in the solution). `src/lib/api/` has the `openapi-fetch` client; `schema.d.ts` next to it is generated from `docs/openapi.json` and git-ignored. Imports use the `#lib/*.ts` alias (SvelteKit 3 has no `$lib`). All SvelteKit config is in `vite.config.ts` (no `svelte.config.js`), including the strict CSP. Only a placeholder page so far. Target layout in `docs/architecture.md`.
 
 ## Commands
 
@@ -66,6 +66,7 @@ Run from the repo root, after `dotnet tool restore` once.
 - Dev run: `powershell ./dev.ps1` starts a throwaway Core (port 47822) and tray app (hotkey Alt+Shift+Q) from source with data in `.dev/`, next to an installed copy. Use the dev Core from the CLI with `org --config .dev/cli.json <command>`.
 - Tray app: after `publish.ps1`, run `dist/desktop/Organizer.Desktop.exe [--config <path>]`. Alt+Q (or the `Hotkey` config key) opens the Capture popup; Enter captures, Esc dismisses. Startup errors show as the tray tooltip and one balloon.
 - Run the Core: `dotnet run --project core/Organizer.Core [-- --config <path>]`. Settings layer: `core/Organizer.Core/appsettings.json` (defaults, ships with the app) < `core.json` (user overrides; default `%APPDATA%/Organizer/core.json`, created on first start containing only a random secret) < environment variables < command line. Auth: `Authorization: Bearer <secret>`. Health: `GET /api/health`. Every endpoint lives under `/api/`; token auth covers only `/api/*`.
+- Web UI (in `web/`, needs Node 24+): `npm run dev` (proxies `/api` to the dev Core on 127.0.0.1:47822; the dev Core's secret is in `.dev/core.json`, not `%APPDATA%`), `npm run build`, `npm run preview`, `npm run check` (svelte-check, prettier, eslint), `npm test` (vitest), `npm run gen:api` (regenerates `schema.d.ts`; `predev`, `prebuild`, `precheck` run it). `powershell ./dev.ps1 -Web` starts the dev Core, tray app and Vite together.
 - Run the Core for development: `dotnet run --project core/Organizer.Core --launch-profile Dev` (or the `Dev` profile in the IDE). Uses a throwaway config and database in the git-ignored `.dev/` folder at the repo root, not your real `%APPDATA%` one. The profile deliberately sets no `applicationUrl`, so address and port still come from the config. In Development only, the Core also serves the Scalar UI at `/scalar`, and both it and `/api/openapi/v1.json` skip token auth (the dev secret is prefilled, so "Test request" works). `DevApiDocs.cs` holds this.
 - OpenAPI description: the Core serves it at `GET /api/openapi/v1.json` in every environment, behind the bearer token. After any API change, regenerate the checked-in copy: `$env:UPDATE_OPENAPI=1; dotnet test tests/Organizer.Core.Tests --filter Served_description_equals_docs_openapi_json` (PowerShell), then commit `docs/openapi.json`. Without the variable, that test fails when the file is stale.
 - New migration: `dotnet dotnet-ef migrations add <Name> --project core/Organizer.Core --output-dir Migrations -- --config <temp path>/core.json` (the config argument keeps design-time startup out of AppData).

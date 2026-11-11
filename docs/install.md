@@ -76,7 +76,7 @@ dotnet .\Organizer.Core.dll
 powershell ./dev.ps1
 ```
 
-Starts the Core (port **47822**) and the tray app (hotkey **Alt+Shift+Q**) from source, with throwaway config and data in `.dev/`. It does not touch the installed copy or `%APPDATA%\Organizer`, and works whether or not the installed copy is running. Ctrl+C stops both. Use the dev Core from the CLI with:
+Starts the Core (port **47822**) and the tray app (hotkey **Alt+Shift+Q**) from source, with throwaway config and data in `.dev/`. It does not touch the installed copy or `%APPDATA%\Organizer`, and works whether or not the installed copy is running. Ctrl+C stops both. `powershell ./dev.ps1 -Web` also starts the web UI's Vite dev server (needs Node 24 or later; Vite prints its URL, default `http://localhost:5173`) and stops it on Ctrl+C. Use the dev Core from the CLI with:
 
 ```powershell
 org --config .dev/cli.json ls

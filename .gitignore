@@ -6,3 +6,7 @@ obj/
 .dev/
 dist/
 temp/
+.svelte-kit/
+build/
+node_modules/
+schema.d.ts
