@@ -23,55 +23,57 @@ catch (Exception ex) when (ex is not HostAbortedException) // HostAbortedExcepti
 
 int Run()
 {
-var configCreated = CoreConfigLoader.EnsureFile(configPath);
+    var configCreated = CoreConfigLoader.EnsureFile(configPath);
 
-// Layers: appsettings.json (defaults) < core.json (user overrides) < environment < command line.
-builder.Configuration.AddJsonFile(configPath, optional: false, reloadOnChange: false);
-builder.Configuration.AddEnvironmentVariables();
-builder.Configuration.AddCommandLine(args);
+    // Layers: appsettings.json (defaults) < core.json (user overrides) < environment < command line.
+    builder.Configuration.AddJsonFile(configPath, optional: false, reloadOnChange: false);
+    builder.Configuration.AddEnvironmentVariables();
+    builder.Configuration.AddCommandLine(args);
 
-var config = CoreConfigLoader.Finalize(builder.Configuration.Get<CoreConfig>() ?? new CoreConfig(), configPath);
-builder.Services.AddSingleton(config);
+    var config = CoreConfigLoader.Finalize(builder.Configuration.Get<CoreConfig>() ?? new CoreConfig(), configPath);
+    builder.Services.AddSingleton(config);
 
-if (builder.Configuration["urls"] is null)
-{
-    builder.WebHost.UseUrls($"http://{config.Address}:{config.Port}");
-}
-builder.Services.AddDbContext<OrganizerDb>(o => 
-    o.UseSqlite($"Data Source={config.DatabasePath}").AddInterceptors(new UnicodeFunctions()));
-builder.Services.AddApiDescription();
+    if (builder.Configuration["urls"] is null)
+    {
+        builder.WebHost.UseUrls($"http://{config.Address}:{config.Port}");
+    }
+    builder.Services.AddDbContext<OrganizerDb>(o => 
+        o.UseSqlite($"Data Source={config.DatabasePath}").AddInterceptors(new UnicodeFunctions()));
+    builder.Services.AddApiDescription();
 
-var app = builder.Build();
+    var app = builder.Build();
+    
+    app.Logger.LogInformation("Using sqlite database file: {DbLocation}", config.DatabasePath);
 
-if (configCreated)
-{
-    app.Logger.LogInformation("Created config file with a new secret: {ConfigPath}", configPath);
-}
-else
-{
-    app.Logger.LogInformation("Using config file: {ConfigPath}", configPath);
-}
+    if (configCreated)
+    {
+        app.Logger.LogInformation("Created config file with a new secret: {ConfigPath}", configPath);
+    }
+    else
+    {
+        app.Logger.LogInformation("Using config file: {ConfigPath}", configPath);
+    }
 
-Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(config.DatabasePath))!);
-using (var scope = app.Services.CreateScope())
-{
-    scope.ServiceProvider.GetRequiredService<OrganizerDb>().Database.Migrate();
-}
+    Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(config.DatabasePath))!);
+    using (var scope = app.Services.CreateScope())
+    {
+        scope.ServiceProvider.GetRequiredService<OrganizerDb>().Database.Migrate();
+    }
 
-app.UseWhen(
-    context => !(app.Environment.IsDevelopment() && DevApiDocs.IsDocsPath(context.Request.Path)),
-    branch => branch.UseTokenAuth(config.Secret));
-app.MapGet("/health", () => Results.Ok(new HealthDto("ok")))
-    .Produces<HealthDto>();
-app.MapItemEndpoints();
-app.MapApiDescription();
-if (app.Environment.IsDevelopment())
-{
-    app.MapDevScalar(config.Secret);
-}
+    app.UseWhen(
+        context => !(app.Environment.IsDevelopment() && DevApiDocs.IsDocsPath(context.Request.Path)),
+        branch => branch.UseTokenAuth(config.Secret));
+    app.MapGet("/health", () => Results.Ok(new HealthDto("ok")))
+        .Produces<HealthDto>();
+    app.MapItemEndpoints();
+    app.MapApiDescription();
+    if (app.Environment.IsDevelopment())
+    {
+        app.MapDevScalar(config.Secret);
+    }
 
-app.Run();
-return 0;
+    app.Run();
+    return 0;
 }
 
 public partial class Program;
