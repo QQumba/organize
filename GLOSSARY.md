@@ -56,4 +56,4 @@ A web UI view that sorts Items into four quadrants by how important and how urge
 
 ## Deferred
 
-Reminders and notifications, Activities (habit-style logging with a target frequency), additional views, the Eisenhower matrix, the web UI, phone access, sync, multi-user.
+Reminders and notifications, Activities (habit-style logging with a target frequency), additional views, the Eisenhower matrix, phone access, sync, multi-user.
