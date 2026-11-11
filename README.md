@@ -27,6 +27,38 @@ org --config .dev/cli.json ls
 
 To start over, delete the `.dev/` folder.
 
+## Run the web UI
+
+The web UI lives in `web/` (SvelteKit, Node project, not in the solution). You need **Node 24 or later** (`web/.nvmrc`).
+
+Easiest, together with the Core and tray app:
+
+```powershell
+powershell ./dev.ps1 -Web
+```
+
+It checks the Node version, runs `npm install` if `web/node_modules` is missing, and starts the Vite dev server next to the Core. Vite prints its URL (default `http://localhost:5173`; another port if that one is taken). Ctrl+C stops everything. Until browser login exists, the placeholder page shows "Core: up, login required".
+
+Or by hand, with a dev Core already running (`powershell ./dev.ps1`, or `dotnet run --project core/Organizer.Core --launch-profile Dev`):
+
+```powershell
+cd web
+npm install     # once
+npm run dev     # proxies /api to the dev Core on 127.0.0.1:47822
+```
+
+Other commands, from `web/`:
+
+```powershell
+npm run check     # svelte-check, prettier, eslint
+npm test          # vitest
+npm run build     # static files in web/build
+npm run preview   # serve the build locally (check the browser console for CSP errors)
+npm run gen:api   # regenerate src/lib/api/schema.d.ts from docs/openapi.json (dev, build and check do it for you)
+```
+
+The dev Core's secret is in `.dev/core.json`, not in `%APPDATA%`.
+
 ## Build, test, install
 
 ```powershell
