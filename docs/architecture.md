@@ -11,7 +11,7 @@ The layout below is the target. `web/` does not exist yet; `CLAUDE.md` Layout li
 - **Client library**: typed C# wrapper over the Core API. Holds no business logic or storage. Shared by the CLI and the desktop app.
 - **CLI** (`org`): .NET Native AOT, thin Client over the client library.
 - **Desktop app**: WPF tray app, thin Client over the client library. Global shortcut opens a capture popup; minimal list view.
-- **Web UI** (later): Svelte + TypeScript, built to static files served by the Core. Its API types are generated from the Core's OpenAPI description.
+- **Web UI** (later): SvelteKit SPA (Svelte 5, TypeScript, `adapter-static`, no SSR) styled with Tailwind, built to static files served by the Core from `wwwroot` on the same origin (ADR 0004). The API lives under `/api/`; any other path that is not a file falls back to `index.html`, so the UI uses history-mode URLs. API types are generated from `docs/openapi.json` with `openapi-typescript` and called through `openapi-fetch`. Soft budget: 80 KB gzipped JS, 10 KB gzipped CSS.
 - Each Client has its own config file with the Core address and secret. Clients are Windows 10/11 only.
 
 ## Layout
