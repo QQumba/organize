@@ -32,9 +32,9 @@ Fetch the ticket with `get_issue` and `includeRelations: true` (comments come fr
 
 ## Picking the next ticket
 
-1. List every ticket once: `list_issues` with project `Organize` and `fields: ["status", "priority", "labels"]`, no state filter. This gives the state of every ticket, which step 3 needs for blockers.
+1. List the candidate column once: `list_issues` with project `Organize`, `state` set to Todo (for "refine next") or In Progress (for "implement next"), and `fields: ["status", "priority", "labels"]`. Do not list Backlog or the closed states.
 2. The candidates are the **Todo** tickets for "refine next" and the **In Progress** tickets for "implement next", minus those labelled `deferred`. Never pick from Backlog. If there are no candidates, warn the user that the column is empty (Todo for "refine next", In Progress for "implement next") and stop. Order them by Linear priority (Urgent, High, Medium, Low, then No priority), then by lowest ticket number. Priority is the user's way to steer the order; most tickets have none, so the number usually decides.
-3. Walk the candidates in that order. For each, fetch its blockers with `get_issue` and `fields: ["relations"]`, look up each blocker's state in the step 1 list, and take the first unblocked ticket. If a blocker is Canceled, ask the user.
+3. Walk the candidates in that order. For each, fetch its blockers with `get_issue` and `fields: ["relations"]`, look up each blocker's state with `get_issue` on that blocker (a blocker is reached through the relation, so this is allowed even when it is Done), and take the first unblocked ticket. If a blocker is Canceled, ask the user.
 4. Tell the user the pick and the reason in one line (for example "ATL-27: lowest unblocked Todo ticket, no blockers"), then start; the user redirects if they want another.
 5. If no candidate is unblocked, stop and list the candidates with their open blockers.
 
@@ -93,7 +93,7 @@ Shape by state:
 
 Rules for every ticket:
 
-- New tickets go to Backlog; the user moves them to Todo. Check `list_issues` for duplicates before creating.
+- New tickets go to Backlog; the user moves them to Todo. Before creating, check `list_issues` for duplicates among open tickets (Backlog, Todo, In Progress, In Review); this is the one case where an agent searches Backlog on its own. Skip the closed states.
 - The `blockedBy` relation is the source of truth for dependencies. The Dependencies section names the same tickets by ID and says why; when you change one, change the other in the same edit.
 - A placeholder for out-of-scope work gets the `deferred` label.
 - A ticket carries what its reader needs in its own text. Point only at files committed to the repo; for anything in `temp/` or another git-ignored path, write the content into the ticket.
@@ -102,8 +102,7 @@ Rules for every ticket:
 ## Rules
 
 - Never delete anything in Linear.
-- Never read, change or move a Backlog ticket unless the user explicitly names it or asks for it.
-- Priority, assignee and every label except `deferred` are the user's.
+- Never read, change or move a Backlog ticket unless the user explicitly names it or asks for it.- Priority, assignee and every label except `deferred` are the user's.
 
 ## Linear tool notes
 
