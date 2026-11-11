@@ -5,6 +5,77 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/session": {
+      "post": {
+        "tags": [
+          "Organizer.Core"
+        ],
+        "summary": "Log in: a right secret sets the session cookie.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Organizer.Core"
+        ],
+        "summary": "Log out: expires the session cookie.",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Organizer.Core"
+        ],
+        "summary": "204 when the request carries a valid session cookie or bearer token, 401 otherwise.",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/health": {
       "get": {
         "tags": [
@@ -680,18 +751,41 @@
             ]
           }
         }
+      },
+      "SessionRequest": {
+        "required": [
+          "secret"
+        ],
+        "type": "object",
+        "properties": {
+          "secret": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
       }
     },
     "securitySchemes": {
       "Bearer": {
         "type": "http",
         "scheme": "bearer"
+      },
+      "Cookie": {
+        "type": "apiKey",
+        "description": "Set by POST /api/session. The real cookie name is organizer_session_<port>, <port> being the Core's configured port.",
+        "name": "organizer_session",
+        "in": "cookie"
       }
     }
   },
   "security": [
     {
       "Bearer": [ ]
+    },
+    {
+      "Cookie": [ ]
     }
   ],
   "tags": [

@@ -82,7 +82,24 @@ public class OpenApiTests
         var scheme = doc.GetProperty("components").GetProperty("securitySchemes").GetProperty("Bearer");
         Assert.Equal("http", scheme.GetProperty("type").GetString());
         Assert.Equal("bearer", scheme.GetProperty("scheme").GetString());
-        Assert.Equal(1, doc.GetProperty("security").GetArrayLength());
+        var cookie = doc.GetProperty("components").GetProperty("securitySchemes").GetProperty("Cookie");
+        Assert.Equal("apiKey", cookie.GetProperty("type").GetString());
+        Assert.Equal("cookie", cookie.GetProperty("in").GetString());
+        Assert.Equal("organizer_session", cookie.GetProperty("name").GetString());
+        Assert.Equal(2, doc.GetProperty("security").GetArrayLength());
+
+        var session = doc.GetProperty("paths").GetProperty("/api/session");
+        foreach (var open in new[] { "post", "delete" })
+        {
+            var security = session.GetProperty(open).GetProperty("security");
+            Assert.Equal(1, security.GetArrayLength());
+            Assert.Empty(security[0].EnumerateObject());
+        }
+        Assert.False(session.GetProperty("get").TryGetProperty("security", out _));
+        Assert.Equal(
+            new[] { "204", "400", "401" },
+            session.GetProperty("post").GetProperty("responses").EnumerateObject().Select(r => r.Name).Order());
+        Assert.True(session.GetProperty("post").TryGetProperty("requestBody", out _));
 
         var paths = doc.GetProperty("paths");
         foreach (var (path, method, status) in new[]

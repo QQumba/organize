@@ -12,6 +12,7 @@ namespace Organizer.Core;
 public static class DevApiDocs
 {
     private const string BearerScheme = "Bearer";
+    private const string CookieScheme = "Cookie";
     private const string OpenApiRoute = "/api/openapi/{documentName}.json";
     private const string EditSchema = "EditItemRequest";
 
@@ -49,7 +50,19 @@ public static class DevApiDocs
                 document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
                 document.Components.SecuritySchemes[BearerScheme] =
                     new OpenApiSecurityScheme { Type = SecuritySchemeType.Http, Scheme = "bearer" };
-                document.Security = [new OpenApiSecurityRequirement { [new OpenApiSecuritySchemeReference(BearerScheme, document)] = [] }];
+                document.Components.SecuritySchemes[CookieScheme] = new OpenApiSecurityScheme
+                {
+                    Type = SecuritySchemeType.ApiKey,
+                    In = ParameterLocation.Cookie,
+                    Name = "organizer_session",
+                    Description = "Set by POST /api/session. The real cookie name is organizer_session_<port>, <port> being the Core's configured port.",
+                };
+                // Two alternatives: a bearer token or the session cookie.
+                document.Security =
+                [
+                    new OpenApiSecurityRequirement { [new OpenApiSecuritySchemeReference(BearerScheme, document)] = [] },
+                    new OpenApiSecurityRequirement { [new OpenApiSecuritySchemeReference(CookieScheme, document)] = [] },
+                ];
                 document.Components.Schemas ??= new Dictionary<string, IOpenApiSchema>();
                 document.Components.Schemas[EditSchema] = EditItemSchema();
                 document.Servers = null; // the generator adds the request host, which would make the file vary
@@ -74,6 +87,9 @@ public static class DevApiDocs
 
         switch (path)
         {
+            case "api/session" when context.Description.HttpMethod is "POST" or "DELETE":
+                operation.Security = [new OpenApiSecurityRequirement()]; // open: login and logout need no auth
+                break;
             case "api/inbox":
                 Describe("category", "Only Items in this Category.");
                 Describe("tag", "Only Items with this Tag. Repeat the parameter to require several Tags.");

@@ -32,6 +32,8 @@ int Run()
 
     var config = CoreConfigLoader.Finalize(builder.Configuration.Get<CoreConfig>() ?? new CoreConfig(), configPath);
     builder.Services.AddSingleton(config);
+    var session = new SessionAuth(config);
+    builder.Services.AddSingleton(session);
 
     if (builder.Configuration["urls"] is null)
     {
@@ -63,8 +65,9 @@ int Run()
     app.UseWhen(
         context => context.Request.Path.StartsWithSegments("/api")
             && !(app.Environment.IsDevelopment() && DevApiDocs.IsDocsPath(context.Request.Path)),
-        branch => branch.UseTokenAuth(config.Secret));
+        branch => branch.UseTokenAuth(session));
     var api = app.MapGroup("/api");
+    api.MapSessionEndpoints();
     api.MapGet("/health", () => Results.Ok(new HealthDto("ok")))
         .Produces<HealthDto>();
     api.MapItemEndpoints();

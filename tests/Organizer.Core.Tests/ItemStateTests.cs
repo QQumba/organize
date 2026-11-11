@@ -143,6 +143,7 @@ public class ItemStateTests
 
         var methods = core.Services.GetServices<EndpointDataSource>()
             .SelectMany(s => s.Endpoints).OfType<RouteEndpoint>()
+            .Where(e => e.RoutePattern.RawText != "/api/session") // DELETE /api/session is logout, not an Item
             .SelectMany(e => e.Metadata.OfType<HttpMethodMetadata>()).SelectMany(m => m.HttpMethods);
         Assert.DoesNotContain("DELETE", methods, StringComparer.OrdinalIgnoreCase);
         Assert.Equal(HttpStatusCode.MethodNotAllowed, (await c.DeleteAsync($"/api/items/{id}")).StatusCode);
