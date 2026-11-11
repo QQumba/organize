@@ -14,7 +14,7 @@ public sealed record HealthDto(string Status);
 public static class ItemMapping
 {
     public static ItemDto ToDto(this Item i) => new(
-        i.Id, i.Text, i.Notes, i.Category?.Name, i.Tags.Select(t => t.Name).Order().ToArray(),
+        i.Id, i.Text, i.Notes, i.Category?.Name, i.Tags.Select(t => t.Name).Order(NameComparer.Order).ToArray(),
         i.DueDate, i.Important, i.Urgent, i.State.ToString().ToLowerInvariant(), i.CreatedAt);
 }
 
@@ -101,7 +101,8 @@ public static class ItemEndpoints
                     }
                     else
                     {
-                        var found = await db.Categories.FirstOrDefaultAsync(c => c.Name == name);
+                        var found = NameComparer.Find(
+                            await db.Categories.OrderBy(c => c.Id).ToListAsync(), c => c.Name, name);
                         if (found is null)
                         {
                             return Bad("Unknown Category.", $"There is no Category '{name}'. Create it first with POST /categories.");
@@ -113,12 +114,11 @@ public static class ItemEndpoints
                 {
                     var names = (tags is null ? [] : tags.AsArray().Select(t => t!.GetValue<string>().Trim()))
                         .Where(n => n.Length > 0)
-                        .DistinctBy(n => n, StringComparer.OrdinalIgnoreCase)
+                        .DistinctBy(n => n, NameComparer.Equality)
                         .ToList();
-                    var existing = await db.Tags.Where(t => names.Contains(t.Name)).ToListAsync();
+                    var existing = await db.Tags.OrderBy(t => t.Id).ToListAsync();
                     item.Tags = names
-                        .Select(n => existing.FirstOrDefault(t => string.Equals(t.Name, n, StringComparison.OrdinalIgnoreCase))
-                                     ?? new Tag { Name = n })
+                        .Select(n => NameComparer.Find(existing, t => t.Name, n) ?? new Tag { Name = n })
                         .ToList();
                 }
             }
@@ -197,7 +197,7 @@ public static class ItemEndpoints
             {
                 return Bad("Name is required.", "A Category needs a name that is not empty or whitespace.");
             }
-            if (await db.Categories.AnyAsync(c => c.Name == name))
+            if (NameComparer.Find(await db.Categories.ToListAsync(), c => c.Name, name) is not null)
             {
                 return Results.Problem(
                     title: "Category exists.", detail: $"A Category named '{name}' already exists.",
@@ -214,7 +214,8 @@ public static class ItemEndpoints
         .ProducesProblem(StatusCodes.Status409Conflict);
 
         app.MapGet("/categories", async (OrganizerDb db) =>
-            Results.Ok(await db.Categories.OrderBy(c => c.Name).Select(c => new CategoryDto(c.Id, c.Name)).ToListAsync()))
+            Results.Ok((await db.Categories.Select(c => new CategoryDto(c.Id, c.Name)).ToListAsync())
+                .OrderBy(c => c.Name, NameComparer.Order).ThenBy(c => c.Id)))
             .WithSummary("All Categories, by name.")
             .Produces<CategoryDto[]>();
 
@@ -223,13 +224,29 @@ public static class ItemEndpoints
             var query = db.Items.Where(i => i.State == ItemState.Open);
             if (!string.IsNullOrWhiteSpace(category))
             {
-                var c = category.Trim();
-                query = query.Where(i => i.Category != null && i.Category.Name == c);
+                var found = NameComparer.Find(await db.Categories.OrderBy(x => x.Id).ToListAsync(), x => x.Name, category.Trim());
+                if (found is null)
+                {
+                    return Results.Ok(Array.Empty<ItemDto>());
+                }
+                var categoryId = found.Id;
+                query = query.Where(i => i.CategoryId == categoryId);
             }
-            foreach (var name in tag.Where(t => !string.IsNullOrWhiteSpace(t)).Select(t => t.Trim()).Distinct(StringComparer.OrdinalIgnoreCase))
+            var tagFilters = tag.Where(t => !string.IsNullOrWhiteSpace(t)).Select(t => t.Trim())
+                .Distinct(NameComparer.Equality).ToList();
+            if (tagFilters.Count > 0)
             {
-                var n = name;
-                query = query.Where(i => i.Tags.Any(t => t.Name == n));
+                var allTags = await db.Tags.OrderBy(t => t.Id).ToListAsync();
+                foreach (var name in tagFilters)
+                {
+                    var found = NameComparer.Find(allTags, t => t.Name, name);
+                    if (found is null)
+                    {
+                        return Results.Ok(Array.Empty<ItemDto>());
+                    }
+                    var tagId = found.Id;
+                    query = query.Where(i => i.Tags.Any(t => t.Id == tagId));
+                }
             }
             var items = await query
                 .Include(i => i.Tags)
