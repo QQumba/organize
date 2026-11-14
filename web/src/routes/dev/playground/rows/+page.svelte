@@ -3,6 +3,8 @@
 	in the chosen charcoal-blue theme (variant G there).
 	Date: 2026-11-14
 	Ticket: ATL-55 follow-up
+	Iteration 2: top line is title, Category and hover actions on the right; bottom line is
+	Important/Urgent markers, due date, Tag chips (omitted when a row has none of them).
 	Iteration 1: only some items have a due date (two here); createdAt/updatedAt are not shown in this
 	view; rows are taller with Tag chips under the title.
 	Reference only: no API calls, no state. Not imported from or into anything else.
@@ -94,23 +96,24 @@
 					<input type="checkbox" aria-label="Done" />
 					<div class="body">
 						<div class="title">
-							{#if row.imp}<span class="mark imp" title="Important" aria-label="Important">■</span
-								>{/if}
-							{#if row.urg}<span class="mark urg" title="Urgent" aria-label="Urgent">▲</span>{/if}
 							<span class="text">{row.text}</span>
+							<span class="actions">
+								<button class="link" type="button">Archive</button>
+								<button class="link" type="button">Edit</button>
+							</span>
+							{#if row.cat}<span class="cat">{row.cat}</span>{/if}
 						</div>
-						{#if row.tags.length}
-							<div class="tags">
+						{#if row.imp || row.urg || row.due || row.tags.length}
+							<div class="meta">
+								{#if row.imp}<span class="mark imp" title="Important" aria-label="Important">■</span
+									>{/if}
+								{#if row.urg}<span class="mark urg" title="Urgent" aria-label="Urgent">▲</span>{/if}
+								{#if row.due}<span class="due" class:overdue={row.due.overdue}>{row.due.text}</span
+									>{/if}
 								{#each row.tags as tag (tag)}<span class="chip">{tag}</span>{/each}
 							</div>
 						{/if}
 					</div>
-					{#if row.cat}<span class="cat">{row.cat}</span>{/if}
-					<span class="actions">
-						<button class="link" type="button">Archive</button>
-						<button class="link" type="button">Edit</button>
-					</span>
-					<span class="due" class:overdue={row.due?.overdue}>{row.due?.text ?? ''}</span>
 				</li>
 			{/each}
 		</ul>
@@ -241,9 +244,10 @@
 		align-items: center;
 		gap: 8px;
 	}
-	.tags {
+	.meta {
 		display: flex;
-		gap: 6px;
+		align-items: center;
+		gap: 8px;
 	}
 	.text {
 		flex: 1;
@@ -296,8 +300,6 @@
 		color: var(--text);
 	}
 	.due {
-		min-width: 40px;
-		text-align: right;
 		color: var(--text-muted);
 		font-size: 12px;
 		font-variant-numeric: tabular-nums;
