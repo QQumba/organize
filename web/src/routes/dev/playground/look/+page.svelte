@@ -10,7 +10,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 
-	const variants = ['a', 'b', 'c', 'd', 'e', 'f', 'g'] as const;
+	const variants = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'] as const;
 	const names: Record<string, string> = {
 		a: 'A · slate, blue',
 		b: 'B · near-black, green',
@@ -18,7 +18,9 @@
 		d: 'D · blue-green, teal',
 		e: 'E · charcoal, orange',
 		f: 'F · violet, rose',
-		g: 'G · charcoal, blue'
+		g: 'G · charcoal, blue',
+		h: 'H · white, blue (light)',
+		i: 'I · cool gray, indigo-blue (light)'
 	};
 
 	const v = $derived.by(() => {
@@ -251,6 +253,35 @@
 		--focus-ring: #9bc2ff;
 		--mark-important: #e5c04a;
 		--mark-urgent: #c49bff;
+	}
+	/* H and I (added later, 2026-11-14, ATL-55 follow-up): light variants; they override color-scheme. */
+	.root[data-variant='h'] {
+		color-scheme: light;
+		--surface: #ffffff;
+		--surface-raised: #f4f5f7;
+		--border: #d5d9e0;
+		--text: #1a1d23;
+		--text-muted: #5b6472;
+		--accent: #1f5fd6;
+		--accent-contrast: #ffffff;
+		--danger: #c62828;
+		--focus-ring: #1f5fd6;
+		--mark-important: #a16207;
+		--mark-urgent: #7c3aed;
+	}
+	.root[data-variant='i'] {
+		color-scheme: light;
+		--surface: #e8eaee;
+		--surface-raised: #f3f4f6;
+		--border: #c4c9d2;
+		--text: #181b21;
+		--text-muted: #505a68;
+		--accent: #1d4fc4;
+		--accent-contrast: #ffffff;
+		--danger: #b3261e;
+		--focus-ring: #1d4fc4;
+		--mark-important: #8a5a00;
+		--mark-urgent: #6d28d9;
 	}
 
 	a {
