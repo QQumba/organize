@@ -10,14 +10,15 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 
-	const variants = ['a', 'b', 'c', 'd', 'e', 'f'] as const;
+	const variants = ['a', 'b', 'c', 'd', 'e', 'f', 'g'] as const;
 	const names: Record<string, string> = {
 		a: 'A · slate, blue',
 		b: 'B · near-black, green',
 		c: 'C · warm brown, amber',
 		d: 'D · blue-green, teal',
 		e: 'E · charcoal, orange',
-		f: 'F · violet, rose'
+		f: 'F · violet, rose',
+		g: 'G · charcoal, blue'
 	};
 
 	const v = $derived.by(() => {
@@ -236,6 +237,20 @@
 		--focus-ring: #f9a8c9;
 		--mark-important: #7dd3a8;
 		--mark-urgent: #f5d76e;
+	}
+	/* G (added later, 2026-11-14, ATL-55 follow-up): E's charcoal surfaces with A's blue accent. */
+	.root[data-variant='g'] {
+		--surface: #1c1c1e;
+		--surface-raised: #262628;
+		--border: #3a3a3d;
+		--text: #eeeeee;
+		--text-muted: #a5a5a8;
+		--accent: #6aa5ff;
+		--accent-contrast: #07142b;
+		--danger: #ff6b6b;
+		--focus-ring: #9bc2ff;
+		--mark-important: #e5c04a;
+		--mark-urgent: #c49bff;
 	}
 
 	a {
