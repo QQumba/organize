@@ -3,6 +3,8 @@
 	in the chosen charcoal-blue theme (variant G there).
 	Date: 2026-11-14
 	Ticket: ATL-55 follow-up
+	Iteration 1: only some items have a due date (two here); createdAt/updatedAt are not shown in this
+	view; rows are taller with Tag chips under the title.
 	Reference only: no API calls, no state. Not imported from or into anything else.
 -->
 <script lang="ts">
@@ -18,7 +20,7 @@
 	}
 
 	const rows = [
-		{ text: 'Купити молоко та хліб', cat: 'Дім', tags: [], imp: false, urg: false, due: due(1) },
+		{ text: 'Купити молоко та хліб', cat: 'Дім', tags: [], imp: false, urg: false, due: due(null) },
 		{
 			text: 'Підготувати звіт для п’ятничної зустрічі',
 			cat: 'Робота',
@@ -34,7 +36,7 @@
 			tags: ['рахунки'],
 			imp: true,
 			urg: true,
-			due: due(0)
+			due: due(null)
 		},
 		{
 			text: 'Переглянути запит на злиття від Єгора',
@@ -42,7 +44,7 @@
 			tags: ['код', 'огляд', 'команда'],
 			imp: false,
 			urg: false,
-			due: due(5)
+			due: due(null)
 		},
 		{
 			text: 'Записати ідеї про подорож до Карпат',
@@ -58,9 +60,16 @@
 			tags: ['події'],
 			imp: true,
 			urg: false,
-			due: due(10)
+			due: due(null)
 		},
-		{ text: 'Прочитати розділ про їжаків', cat: '', tags: [], imp: false, urg: false, due: due(7) }
+		{
+			text: 'Прочитати розділ про їжаків',
+			cat: '',
+			tags: [],
+			imp: false,
+			urg: false,
+			due: due(null)
+		}
 	];
 </script>
 
@@ -83,11 +92,20 @@
 			{#each rows as row (row.text)}
 				<li class="row">
 					<input type="checkbox" aria-label="Done" />
-					{#if row.imp}<span class="mark imp" title="Important" aria-label="Important">■</span>{/if}
-					{#if row.urg}<span class="mark urg" title="Urgent" aria-label="Urgent">▲</span>{/if}
-					<span class="text">{row.text}</span>
+					<div class="body">
+						<div class="title">
+							{#if row.imp}<span class="mark imp" title="Important" aria-label="Important">■</span
+								>{/if}
+							{#if row.urg}<span class="mark urg" title="Urgent" aria-label="Urgent">▲</span>{/if}
+							<span class="text">{row.text}</span>
+						</div>
+						{#if row.tags.length}
+							<div class="tags">
+								{#each row.tags as tag (tag)}<span class="chip">{tag}</span>{/each}
+							</div>
+						{/if}
+					</div>
 					{#if row.cat}<span class="cat">{row.cat}</span>{/if}
-					{#each row.tags as tag (tag)}<span class="chip">{tag}</span>{/each}
 					<span class="actions">
 						<button class="link" type="button">Archive</button>
 						<button class="link" type="button">Edit</button>
@@ -196,8 +214,8 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		height: 34px;
-		padding: 0 10px;
+		height: 54px;
+		padding: 0 12px;
 		border-bottom: 1px solid var(--border);
 	}
 	.row:last-child {
@@ -210,6 +228,22 @@
 	.row input[type='checkbox'] {
 		accent-color: var(--accent);
 		margin: 0;
+	}
+	.body {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+	.title {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.tags {
+		display: flex;
+		gap: 6px;
 	}
 	.text {
 		flex: 1;
