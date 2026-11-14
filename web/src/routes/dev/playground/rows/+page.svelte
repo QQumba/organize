@@ -3,6 +3,7 @@
 	in the chosen charcoal-blue theme (variant G there).
 	Date: 2026-11-14
 	Ticket: ATL-55 follow-up
+	Iteration 4: the Category is vertically centered on the row like the actions.
 	Iteration 3: hover actions are the right-most element, vertically centered on the whole row; the
 	Category shifts left when they appear.
 	Iteration 2: top line is title, Category and hover actions on the right; bottom line is
@@ -99,7 +100,6 @@
 					<div class="body">
 						<div class="title">
 							<span class="text">{row.text}</span>
-							{#if row.cat}<span class="cat">{row.cat}</span>{/if}
 						</div>
 						{#if row.imp || row.urg || row.due || row.tags.length}
 							<div class="meta">
@@ -112,6 +112,7 @@
 							</div>
 						{/if}
 					</div>
+					{#if row.cat}<span class="cat">{row.cat}</span>{/if}
 					<span class="actions">
 						<button class="link" type="button">Archive</button>
 						<button class="link" type="button">Edit</button>
