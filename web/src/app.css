@@ -1,5 +1,129 @@
 @import 'tailwindcss';
 
+/*
+ * Theme tokens: the one place colors, font and radii are defined (palette G from the rows prototype).
+ * Dark only. A light theme is one block of overrides of the --color-* tokens below, for example
+ * `:root[data-theme='light'] { --color-surface: ...; }` together with `color-scheme: light`;
+ * components use only the tokens, so they need no change.
+ */
 @theme {
-	/* Real tokens come with the web UI conventions ticket. */
+	--color-surface: #1c1c1e;
+	--color-surface-raised: #262628;
+	--color-border: #3a3a3d;
+	--color-text: #eeeeee;
+	--color-text-muted: #a5a5a8;
+	--color-accent: #6aa5ff;
+	--color-accent-contrast: #07142b;
+	--color-focus-ring: #9bc2ff;
+	--color-danger: #ff6b6b;
+	--color-mark-important: #e5c04a;
+	--color-mark-urgent: #c49bff;
+
+	--font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+	/* 4px for controls, 6px for panels and the list container; `rounded-full` is for Tag chips. */
+	--radius-control: 4px;
+	--radius-panel: 6px;
+
+	--height-control: 28px;
+	--height-row: 54px;
+}
+
+@layer base {
+	:root {
+		color-scheme: dark;
+	}
+
+	body {
+		background-color: var(--color-surface);
+		color: var(--color-text);
+		font-family: var(--font-sans);
+		font-size: 14px;
+		line-height: 1.4;
+	}
+
+	/* One focus ring for every focusable element. */
+	:focus-visible {
+		outline: 2px solid var(--color-focus-ring);
+		outline-offset: 1px;
+	}
+}
+
+/* Base styles for buttons and inputs. Compact: 28px high controls. */
+@layer components {
+	.btn {
+		display: inline-flex;
+		height: var(--height-control);
+		cursor: pointer;
+		align-items: center;
+		justify-content: center;
+		gap: 4px;
+		border: 1px solid transparent;
+		border-radius: var(--radius-control);
+		padding: 0 12px;
+		font: inherit;
+		white-space: nowrap;
+	}
+
+	.btn:disabled {
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+
+	.btn-primary {
+		background-color: var(--color-accent);
+		color: var(--color-accent-contrast);
+	}
+
+	.btn-primary:hover:not(:disabled) {
+		filter: brightness(1.1);
+	}
+
+	.btn-secondary {
+		background-color: var(--color-surface-raised);
+		border-color: var(--color-border);
+		color: var(--color-text);
+	}
+
+	.btn-secondary:hover:not(:disabled) {
+		background-color: var(--color-surface);
+	}
+
+	.btn-danger {
+		border-color: var(--color-danger);
+		color: var(--color-danger);
+	}
+
+	.btn-danger:hover:not(:disabled) {
+		background-color: var(--color-danger);
+		color: var(--color-surface);
+	}
+
+	/* Text and date inputs. Mark an invalid one with aria-invalid="true". */
+	.input {
+		height: var(--height-control);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-control);
+		background-color: var(--color-surface-raised);
+		padding: 0 8px;
+		color: var(--color-text);
+		font: inherit;
+	}
+
+	.input::placeholder {
+		color: var(--color-text-muted);
+	}
+
+	.input:hover:not(:disabled) {
+		border-color: var(--color-text-muted);
+	}
+
+	.input:disabled {
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+
+	.input[aria-invalid='true'] {
+		border-color: var(--color-danger);
+	}
 }

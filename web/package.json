@@ -17,7 +17,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"precheck": "npm run gen:api",
-		"check": "svelte-kit sync && svelte-check && prettier --check . && eslint .",
+		"check": "svelte-kit sync && svelte-check && prettier --check . && eslint . && node scripts/check-conventions.mjs",
 		"test": "vitest run"
 	},
 	"devDependencies": {
