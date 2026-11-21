@@ -7,7 +7,12 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>Organizer.Desktop</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\assets\icon\icon.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\assets\icon\icon.ico" LogicalName="icon.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\client\Organizer.Client\Organizer.Client.csproj" />

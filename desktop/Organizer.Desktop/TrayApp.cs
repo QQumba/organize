@@ -55,7 +55,7 @@ public sealed class TrayApp : IDisposable
         var menu = new System.Windows.Forms.ContextMenuStrip();
         menu.Items.Add("Open", null, (_, _) => _popup.ShowPopup());
         menu.Items.Add("Quit", null, (_, _) => System.Windows.Application.Current.Shutdown());
-        _icon.Icon = System.Drawing.SystemIcons.Application;
+        _icon.Icon = LoadIcon();
         _icon.ContextMenuStrip = menu;
         _icon.MouseClick += (_, e) =>
         {
@@ -77,6 +77,20 @@ public sealed class TrayApp : IDisposable
             _popup.ShowPopup();
         }
         return IntPtr.Zero;
+    }
+
+    /// <summary>The app icon embedded from assets/icon/icon.ico; the Windows default if it cannot be read.</summary>
+    private static System.Drawing.Icon LoadIcon()
+    {
+        try
+        {
+            using var stream = typeof(TrayApp).Assembly.GetManifestResourceStream("icon.ico");
+            if (stream is not null) return new System.Drawing.Icon(stream, System.Windows.Forms.SystemInformation.SmallIconSize);
+        }
+        catch (Exception)
+        {
+        }
+        return System.Drawing.SystemIcons.Application;
     }
 
     private static string Truncate(string text, int max)
