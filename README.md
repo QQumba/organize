@@ -27,6 +27,22 @@ org --config .dev/cli.json ls
 
 To start over, delete the `.dev/` folder.
 
+### Start and stop in the background
+
+Meant for agents and scripts, but works for you too. Nothing stays in the foreground and nothing needs Ctrl+C:
+
+```powershell
+powershell ./dev.ps1 -Start -Web -NoTray   # Core + Vite, no tray app
+powershell ./dev.ps1 -Stop                 # stops exactly what -Start started
+```
+
+- `-Start` runs everything hidden, waits until the Core (and Vite, with `-Web`) answers, prints `http://127.0.0.1:47822` and `http://localhost:5173`, and returns. The first start can take a minute or two while the Core builds. Leave out `-Web` for no Vite, and `-NoTray` for no tray app.
+- Output goes to `.dev/logs/` (`core.log`, `vite.log`, `desktop.log`); the started processes are recorded in `.dev/pids.json`.
+- Running `-Start` again stops the previous set first. If port 47822 or 5173 belongs to something else, it fails and leaves that process alone.
+- `-Stop` only kills recorded processes whose start time and path still match, never by name or port, so your installed Core is safe.
+
+Details: `docs/install.md`.
+
 ## Run the web UI
 
 The web UI lives in `web/` (SvelteKit, Node project, not in the solution). You need **Node 24 or later** (`web/.nvmrc`).
