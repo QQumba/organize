@@ -71,7 +71,7 @@ A ticket is ready for In Progress when:
 ## Finishing a ticket
 
 1. All acceptance criteria met, tests pass, decisions recorded, work pushed to `develop`.
-2. If the ticket states a manual demo, run it yourself against the dev setup (for UI, in a real browser against the dev Core). If you cannot run it, say so in the comment instead of claiming it.
+2. If the ticket states a manual demo, run it yourself against the dev setup (for UI, in a real browser against the dev Core). If you cannot run it, say so in the comment instead of claiming it. Start and stop the dev Core and web dev server with `powershell ./dev.ps1 -Start -Web -NoTray` and `powershell ./dev.ps1 -Stop`.
 3. Move the ticket to **In Review**.
 4. Add one short comment: what changed, and what was verified and how (tests, manual demo, or not run).
 

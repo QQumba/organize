@@ -82,6 +82,19 @@ Starts the Core (port **47822**) and the tray app (hotkey **Alt+Shift+Q**) from 
 org --config .dev/cli.json ls
 ```
 
+### Detached start and stop (for agents and scripts)
+
+```powershell
+powershell ./dev.ps1 -Start [-Web] [-NoTray]
+powershell ./dev.ps1 -Stop
+```
+
+`-Start` runs the dev Core (and with `-Web` Vite, pinned to port 5173 with `--strictPort`; the tray app too unless `-NoTray`) hidden and detached, waits until the Core's `/api/health` answers (and Vite's page, with `-Web`; up to 120 s), prints the Core URL (`http://127.0.0.1:47822`) and the Vite URL (`http://localhost:5173`), and exits 0. On a timeout or an early exit it prints the tail of the failing process's log, stops what it started and exits 1. If port 47822 or 5173 is held by a process it did not start, it fails and leaves that process alone. A second `-Start` first stops the set the first one recorded.
+
+Each process's output goes to `.dev/logs/core.log`, `vite.log` and `desktop.log` (overwritten per start). `.dev/pids.json` records the PID, start time and executable path of each process; the PID is that of a `cmd.exe` wrapper, and its children go with it.
+
+`-Stop` kills a recorded process (and its children) only when it is alive and its start time and path still match the record; otherwise it says it skipped it. It never matches by image name, port or command line, so the installed Core is never touched. It deletes `pids.json` and exits 0 even when there was nothing to stop. `-Start` with `-Stop` or `-ConfigOnly` is a usage error. Without these switches `dev.ps1` runs in the foreground as above (`-NoTray` also works there).
+
 ## Manual checklist
 
 No UI automation, so check by hand:
