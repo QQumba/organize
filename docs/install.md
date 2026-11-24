@@ -4,7 +4,7 @@ Windows 10/11, per user, no admin. Plain folders plus scripts; there is no insta
 
 ## Prerequisites
 
-- .NET 10 SDK (to build).
+- .NET 10 SDK and Node 24 or later (to build; Node is used only by `publish.ps1`, to build the web UI).
 - Running the result: the **ASP.NET Core 10 runtime** (Core) and the **.NET 10 Desktop Runtime** (tray app).
 - Building the CLI (Native AOT): the Visual Studio "Desktop development with C++" workload. The publish may print "'vswhere.exe' is not recognized" (it is not on `PATH`); this is harmless, the publish still finds Visual Studio and succeeds.
 
@@ -15,7 +15,9 @@ dotnet tool restore   # once
 powershell ./publish.ps1
 ```
 
-Produces `dist/core/`, `dist/cli/` and `dist/desktop/` (git-ignored).
+Produces `dist/core/` (including `wwwroot`, the built web UI), `dist/cli/` and `dist/desktop/` (git-ignored). It prints the gzipped size of the web UI's JS and CSS and warns when over budget (80 KB and 10 KB); it never fails on size.
+
+Stop the dev environment (`dev.ps1 -Stop`) before publishing: `npm ci` fails while `dev.ps1 -Web` is running.
 
 ## Install
 
@@ -29,7 +31,7 @@ This affects only that process and needs no admin. The script refuses to run ele
 
 It:
 
-- copies `dist/*` to `%LOCALAPPDATA%\Organizer\core`, `\cli`, `\desktop`;
+- copies `dist/*` to `%LOCALAPPDATA%\Organizer\core` (with `wwwroot`), `\cli`, `\desktop`;
 - registers the Task Scheduler task `Organizer Core` (at logon, current user, no time limit, restart on failure) and starts it;
 - adds the `Organizer` value to `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` for the tray app, and starts it;
 - adds `%LOCALAPPDATA%\Organizer\cli` to the user `PATH` (open a new terminal to use `org`);
@@ -53,6 +55,7 @@ Removes the task, the `Run` value, the `PATH` entry and `%LOCALAPPDATA%\Organize
 | What | Where |
 |---|---|
 | Programs | `%LOCALAPPDATA%\Organizer\{core,cli,desktop}` |
+| Web UI | `%LOCALAPPDATA%\Organizer\core\wwwroot`, served at the Core address (`http://127.0.0.1:47821/`) |
 | Configs | `%APPDATA%\Organizer\core.json`, `cli.json`, `desktop.json` |
 | Database | `%APPDATA%\Organizer\organizer.db` (default) |
 | Logs | `%APPDATA%\Organizer\logs\core-<yyyyMMddTHHmmss>.log` (1 MB each, newest 7 kept) |
@@ -95,6 +98,17 @@ Each process's output goes to `.dev/logs/core.log`, `vite.log` and `desktop.log`
 
 `-Stop` kills a recorded process (and its children) only when it is alive and its start time and path still match the record; otherwise it says it skipped it. It never matches by image name, port or command line, so the installed Core is never touched. It deletes `pids.json` and exits 0 even when there was nothing to stop. `-Start` with `-Stop` or `-ConfigOnly` is a usage error. Without these switches `dev.ps1` runs in the foreground as above (`-NoTray` also works there).
 
+### Try the web UI without replacing the installed copy
+
+```powershell
+powershell ./dev.ps1 -Start -NoTray   # once, so .dev/core.json exists
+powershell ./dev.ps1 -Stop            # the dev Core holds port 47822
+cd dist/core
+./Organizer.Core.exe --config <repo>/.dev/core.json
+```
+
+Then open `http://127.0.0.1:47822/`.
+
 ## Manual checklist
 
 No UI automation, so check by hand:
@@ -109,3 +123,4 @@ No UI automation, so check by hand:
 8. `uninstall.ps1 -RemoveData` also removes `%APPDATA%\Organizer`.
 9. With the installed copy running, `dev.ps1` starts a second Core and tray app; Alt+Q and Alt+Shift+Q each open their own popup; `org --config .dev/cli.json ls` shows only dev data.
 10. Occupy the Core's port (for example `$l = [Net.Sockets.TcpListener]::new('127.0.0.1', 47821); $l.Start()`), start the Core, and read the reason ("address already in use") in the newest `%APPDATA%\Organizer\logs\core-*.log`.
+11. Open `http://127.0.0.1:47821/`: the web UI shows, `/some/page` shows it too, and `/api/health` still answers.

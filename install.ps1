@@ -34,6 +34,9 @@ try {
             throw "dist/$($p[0])/$($p[1]) not found. Run 'powershell ./publish.ps1' first."
         }
     }
+    if (-not (Test-Path (Join-Path $PSScriptRoot 'dist/core/wwwroot/index.html'))) {
+        throw "dist/core/wwwroot/index.html not found. Run 'powershell ./publish.ps1' first."
+    }
     $port = Get-CorePort (Join-Path $PSScriptRoot 'dist/core/appsettings.json')
 
     # Stop the running copy (task first, then the process; by path so a dev Core is left alone).
