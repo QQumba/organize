@@ -62,6 +62,7 @@ int Run()
         scope.ServiceProvider.GetRequiredService<OrganizerDb>().Database.Migrate();
     }
 
+    app.UseWebUi();
     app.UseWhen(
         context => context.Request.Path.StartsWithSegments("/api")
             && !(app.Environment.IsDevelopment() && DevApiDocs.IsDocsPath(context.Request.Path)),

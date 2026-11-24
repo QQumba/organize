@@ -12,3 +12,6 @@ node_modules/
 schema.d.ts
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
+
+# A copied web build
+core/Organizer.Core/wwwroot/

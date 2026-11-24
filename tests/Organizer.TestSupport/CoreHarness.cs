@@ -22,10 +22,15 @@ public sealed class CoreHarness : WebApplicationFactory<Program>
     private readonly string _environment;
 
     /// <param name="environment">Hosting environment; the test host's own default is Development.</param>
-    public CoreHarness(string configFileName = "core.json", string environment = "Production")
+    private readonly string _webRoot;
+
+    /// <param name="webRoot">Web root folder to serve; by default a folder that does not exist, so a stray
+    /// build in the project's wwwroot cannot change a test.</param>
+    public CoreHarness(string configFileName = "core.json", string environment = "Production", string? webRoot = null)
     {
         ConfigPath = Path.Combine(Folder, configFileName);
         _environment = environment;
+        _webRoot = webRoot ?? Path.Combine(Folder, "no-wwwroot");
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -33,6 +38,7 @@ public sealed class CoreHarness : WebApplicationFactory<Program>
         // Same configuration key that `--config <path>` sets on the command line.
         builder.UseSetting("config", ConfigPath);
         builder.UseEnvironment(_environment);
+        builder.UseWebRoot(_webRoot);
     }
 
     /// <summary>Pre-writes core.json (user overrides) before the Core starts.</summary>
