@@ -56,8 +56,9 @@ Source: the rows prototype (`/dev/playground/rows`, iteration 4). The shared wid
 **Item row** (a baseline, not final: the implementer may deviate with a reason stated in the ticket comment): 54px high (also without a bottom line) on `surface-raised` with a `border` divider, inside a rounded `border` container (`rounded-panel`); on hover or focus-within the row turns `surface`. Left to right: a checkbox (`accent-color`), the body, the Category, the hover actions.
 
 - Body top line: the title on one line with an ellipsis.
-- Body bottom line, only when there is something to show: Important marker `■` (`mark-important`), Urgent marker `▲` (`mark-urgent`), due date `DD.MM` (12px, tabular numbers, `text-muted`, `danger` when overdue), Tag chips.
+- Body bottom line, only when there is something to show: Important marker `■` (`mark-important`), Urgent marker `▲` (`mark-urgent`), due date (12px, tabular numbers, `text-muted`, `danger` when overdue; label from `dueDate.ts`: "Today", "Tomorrow", "Yesterday", else "12 Nov", plus the year when not the current one; tooltip "Thursday, 12 November 2026"), a `≡` notes marker when the Item has notes, Tag chips.
 - Category: 12px `text-muted`, vertically centered on the row.
+- Built as `ItemRow.svelte` (ATL-32): the title is a link to `/items/{id}`; the per-view action (done checkbox, Restore) is the `action` snippet, placed left of the body and never inside the link; `overdueHighlight` (default off) is turned on only for open Items; `error` shows a failed action on the row. Deviations from the baseline: no hover actions yet (Edit and Archive are not on the row; archiving is on the edit page), and the checkbox is always visible.
 - Actions (Archive, Edit): 12px `text-muted` text buttons, `text` on hover; the right-most element, vertically centered, shown only on hover or focus-within; the Category shifts left when they appear.
 
 **Tag chip:** 1px `border` pill (`rounded-full`), 12px, `text-muted`.
