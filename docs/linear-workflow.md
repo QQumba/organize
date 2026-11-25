@@ -20,12 +20,17 @@ A ticket with the `deferred` label is a placeholder for out-of-scope work. Work 
 
 ## Which session am I?
 
-A session either refines one ticket or implements one ticket. The next ticket starts in a fresh session.
+A session handles one ticket, in one of two modes. The next ticket starts in a fresh session.
+
+- **Combined (the usual mode):** the user asks to refine and implement the ticket ("refine and implement ATL-N"). The session refines it, the user confirms, the ticket moves to In Progress, and the same session implements it. This is cheaper and the agent remembers the refinement decisions.
+- **Separate:** one session refines, a later fresh session implements. Use it when the ticket is big, when the context is already large, or when the user wants an independent check that the spec stands alone.
+
+Without a request for both, a session only refines or only implements, as the user asks. Never start implementing without the user's explicit request, even right after refining.
 
 Fetch the ticket with `get_issue` and `includeRelations: true` (comments come from `list_comments`), then:
 
 - The user says "refine next" or "implement next": pick the ticket first (Picking the next ticket).
-- The ticket is in **Todo** and the user asks to refine it, or to implement it: refine it. Implement a Todo ticket only if the user explicitly confirms that this ticket needs no refinement.
+- The ticket is in **Todo** and the user asks to refine it, or to implement it: refine it. If the user asked for both, continue into implementation after the user confirms and the ticket is In Progress (Combined session). Implement a Todo ticket only if the user explicitly confirms that this ticket needs no refinement.
 - The ticket is in **In Progress** and the user asks to implement it: implement it. If the user asks to refine it, refine it again.
 - The ticket is in **Backlog**: touch it only because the user named it. Treat it as a Todo ticket (refine it, and move it to In Progress when the user confirms), unless the user says otherwise.
 - Any other state: ask the user what they want.
@@ -52,7 +57,7 @@ The ticket stays in Todo while you work on it (or in Backlog, if the user named 
 3. Ask the user about each open decision. Put recommendations, not surveys. For small gaps, propose a default and let the user confirm or change it. Treat every section outside the unrefined shape (Writing tickets), and any "proposed" wording, as open decisions to confirm.
 4. Split the ticket if it is too big for one implementation session (Splitting a ticket). Raise new tickets for loose ends (Writing tickets).
 5. Rewrite the ticket so it stands alone: the implementation agent must not have to guess.
-6. When the user confirms the ticket is settled, move it to **In Progress**. Stop. Do not start implementing; that is a separate session.
+6. When the user confirms the ticket is settled, move it to **In Progress**. Then stop, unless the user asked for refine and implement in this session (Combined session); otherwise implementing is a separate session.
 
 A ticket is ready for In Progress when:
 
@@ -61,6 +66,14 @@ A ticket is ready for In Progress when:
 - The `blockedBy` relations are complete and the Dependencies section matches them.
 - Tests and docs to change are stated.
 - A ticket whose result is checked by hand states the manual demo to run.
+
+## Combined session
+
+Refine as above, then implement in the same session. These stay the same as in two sessions:
+
+- The ticket is rewritten so it stands alone, even though the agent remembers more than the text says. Later tickets and the user's review rely on the text, not on the session.
+- The user confirms the refined ticket before it moves to In Progress, and implementation starts only after that.
+- The implementation rules below apply unchanged, including moving the ticket back to Todo if something would have to be guessed.
 
 ## Implementing a ticket
 
