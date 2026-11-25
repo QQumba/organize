@@ -19,20 +19,20 @@ public static class DevApiDocs
     // Hand-written: every field optional, and null is allowed (it clears the field).
     private static OpenApiSchema EditItemSchema()
     {
-        static OpenApiSchema Nullable(JsonSchemaType type, string? format = null) =>
-            new() { Type = type | JsonSchemaType.Null, Format = format };
+        static OpenApiSchema Nullable(JsonSchemaType type, string? format = null, int? maxLength = null) =>
+            new() { Type = type | JsonSchemaType.Null, Format = format, MaxLength = maxLength };
         return new OpenApiSchema
         {
             Type = JsonSchemaType.Object,
             Properties = new Dictionary<string, IOpenApiSchema>
             {
-                ["text"] = Nullable(JsonSchemaType.String),
-                ["notes"] = Nullable(JsonSchemaType.String),
+                ["text"] = Nullable(JsonSchemaType.String, maxLength: Limits.Text),
+                ["notes"] = Nullable(JsonSchemaType.String, maxLength: Limits.Notes),
                 ["category"] = Nullable(JsonSchemaType.String),
                 ["tags"] = new OpenApiSchema
                 {
                     Type = JsonSchemaType.Array | JsonSchemaType.Null,
-                    Items = new OpenApiSchema { Type = JsonSchemaType.String },
+                    Items = new OpenApiSchema { Type = JsonSchemaType.String, MaxLength = Limits.Name },
                 },
                 ["dueDate"] = Nullable(JsonSchemaType.String, "date"),
                 ["important"] = Nullable(JsonSchemaType.Boolean),
@@ -68,8 +68,37 @@ public static class DevApiDocs
                 document.Servers = null; // the generator adds the request host, which would make the file vary
                 return Task.CompletedTask;
             });
+            o.AddSchemaTransformer(DescribeSchema);
             o.AddOperationTransformer(DescribeOperation);
         });
+
+    // The state enum and the length limits, which the type information cannot express.
+    private static Task DescribeSchema(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken _)
+    {
+        void Limit(string property, int max)
+        {
+            if (schema.Properties?.TryGetValue(property, out var p) == true && p is OpenApiSchema s)
+            {
+                s.MaxLength = max;
+            }
+        }
+
+        var type = context.JsonTypeInfo.Type;
+        if (type == typeof(Organizer.Contracts.ItemDto) &&
+            schema.Properties?.TryGetValue("state", out var state) == true && state is OpenApiSchema stateSchema)
+        {
+            stateSchema.Enum = [.. new[] { "open", "done", "archived" }.Select(v => (JsonNode)JsonValue.Create(v)!)];
+        }
+        else if (type == typeof(Organizer.Contracts.CaptureRequest))
+        {
+            Limit("text", Limits.Text);
+        }
+        else if (type == typeof(CategoryRequest))
+        {
+            Limit("name", Limits.Name);
+        }
+        return Task.CompletedTask;
+    }
 
     // Documentation that endpoint metadata cannot express.
     private static Task DescribeOperation(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken _)

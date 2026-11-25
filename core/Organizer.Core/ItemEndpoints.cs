@@ -15,7 +15,15 @@ public static class ItemMapping
 {
     public static ItemDto ToDto(this Item i) => new(
         i.Id, i.Text, i.Notes, i.Category?.Name, i.Tags.Select(t => t.Name).Order(NameComparer.Order).ToArray(),
-        i.DueDate, i.Important, i.Urgent, i.State.ToString().ToLowerInvariant(), i.CreatedAt);
+        i.DueDate, i.Important, i.Urgent, i.State.ToString().ToLowerInvariant(), i.CreatedAt, i.DoneAt, i.ArchivedAt);
+}
+
+/// <summary>Maximum lengths (UTF-16 units, as a browser maxlength counts) checked on every write.</summary>
+public static class Limits
+{
+    public const int Text = 500;
+    public const int Notes = 10_000;
+    public const int Name = 50; // Category and Tag names
 }
 
 public static class ItemEndpoints
@@ -26,6 +34,17 @@ public static class ItemEndpoints
     private static IResult Bad(string title, string detail) =>
         Results.Problem(title: title, detail: detail, statusCode: StatusCodes.Status400BadRequest);
 
+    /// <summary>A 400 naming the field and its limit if the value is longer; otherwise null.</summary>
+    private static IResult? TooLong(string field, string? value, int max) =>
+        value is not null && value.Length > max
+            ? Bad($"{field} is too long.", $"{field} is too long: {max} characters at most.")
+            : null;
+
+    private static IResult NotFound(string what, int id) =>
+        Results.Problem(
+            title: $"{what} not found.", detail: $"There is no {what} with ID {id}.",
+            statusCode: StatusCodes.Status404NotFound);
+
     public static void MapItemEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/items", async (CaptureRequest request, OrganizerDb db) =>
@@ -35,6 +54,10 @@ public static class ItemEndpoints
             {
                 return Bad("Text is required.", "Capture needs a line of text that is not empty or whitespace.");
             }
+            if (TooLong("Text", text, Limits.Text) is { } tooLong)
+            {
+                return tooLong;
+            }
             var item = new Item { Text = text, CreatedAt = DateTime.UtcNow };
             db.Items.Add(item);
             await db.SaveChangesAsync();
@@ -43,6 +66,15 @@ public static class ItemEndpoints
         .WithSummary("Capture an Item from one line of text.")
         .Produces<ItemDto>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        app.MapGet("/items/{id:int}", async (int id, OrganizerDb db) =>
+        {
+            var item = await db.Items.Include(i => i.Tags).Include(i => i.Category).FirstOrDefaultAsync(i => i.Id == id);
+            return item is null ? NotFound("Item", id) : Results.Ok(item.ToDto());
+        })
+        .WithSummary("Get one Item, in any state.")
+        .Produces<ItemDto>()
+        .ProducesProblem(StatusCodes.Status404NotFound);
 
         app.MapPatch("/items/{id:int}", async (int id, JsonObject body, OrganizerDb db) =>
         {
@@ -71,11 +103,19 @@ public static class ItemEndpoints
                     {
                         return Bad("Text is required.", "Text cannot be cleared or blank.");
                     }
+                    if (TooLong("Text", t, Limits.Text) is { } tooLong)
+                    {
+                        return tooLong;
+                    }
                     item.Text = t;
                 }
                 if (Has(body, "notes", out var notes))
                 {
                     var n = notes?.GetValue<string>();
+                    if (TooLong("Notes", n, Limits.Notes) is { } tooLong)
+                    {
+                        return tooLong;
+                    }
                     item.Notes = string.IsNullOrWhiteSpace(n) ? null : n;
                 }
                 if (Has(body, "dueDate", out var due))
@@ -116,6 +156,10 @@ public static class ItemEndpoints
                         .Where(n => n.Length > 0)
                         .DistinctBy(n => n, NameComparer.Equality)
                         .ToList();
+                    if (names.Select(n => TooLong("Tag name", n, Limits.Name)).FirstOrDefault(r => r is not null) is { } tooLong)
+                    {
+                        return tooLong;
+                    }
                     var existing = await db.Tags.OrderBy(t => t.Id).ToListAsync();
                     item.Tags = names
                         .Select(n => NameComparer.Find(existing, t => t.Name, n) ?? new Tag { Name = n })
@@ -133,7 +177,7 @@ public static class ItemEndpoints
         })
         .WithSummary("Edit an Item.")
         .WithDescription("Send only the fields to change. An omitted field is unchanged; an explicit null clears it " +
-                         "(text cannot be cleared). category must name an existing Category; tags replaces the Item's Tags; " +
+                         "(text cannot be cleared). Length limits: text 500, notes 10,000, Tag names 50 characters; only the fields sent are checked. category must name an existing Category; tags replaces the Item's Tags; " +
                          "dueDate is yyyy-MM-dd.")
         .Produces<ItemDto>()
         .ProducesProblem(StatusCodes.Status400BadRequest)
@@ -197,6 +241,10 @@ public static class ItemEndpoints
             {
                 return Bad("Name is required.", "A Category needs a name that is not empty or whitespace.");
             }
+            if (TooLong("Name", name, Limits.Name) is { } tooLong)
+            {
+                return tooLong;
+            }
             if (NameComparer.Find(await db.Categories.ToListAsync(), c => c.Name, name) is not null)
             {
                 return Results.Problem(
@@ -212,6 +260,48 @@ public static class ItemEndpoints
         .Produces<CategoryDto>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status409Conflict);
+
+        app.MapPatch("/categories/{id:int}", async (int id, CategoryRequest request, OrganizerDb db) =>
+        {
+            var category = await db.Categories.FindAsync(id);
+            if (category is null)
+            {
+                return NotFound("Category", id);
+            }
+            var name = request.Name?.Trim();
+            if (string.IsNullOrEmpty(name))
+            {
+                return Bad("Name is required.", "A Category needs a name that is not empty or whitespace.");
+            }
+            if (TooLong("Name", name, Limits.Name) is { } tooLong)
+            {
+                return tooLong;
+            }
+            var others = (await db.Categories.Where(c => c.Id != id).ToListAsync());
+            if (NameComparer.Find(others, c => c.Name, name) is not null)
+            {
+                return Results.Problem(
+                    title: "Category exists.", detail: $"A Category named '{name}' already exists.",
+                    statusCode: StatusCodes.Status409Conflict);
+            }
+            category.Name = name;
+            await db.SaveChangesAsync();
+            return Results.Ok(new CategoryDto(category.Id, category.Name));
+        })
+        .WithSummary("Rename a Category.")
+        .WithDescription("Its Items keep the Category and show the new name. Name: at most 50 characters. " +
+                         "Changing only the case of its own name is allowed.")
+        .Produces<CategoryDto>()
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
+
+        app.MapGet("/tags", async (OrganizerDb db) =>
+            Results.Ok((await db.Tags.Where(t => t.Items.Any()).Select(t => t.Name).ToListAsync())
+                .Order(NameComparer.Order)))
+            .WithSummary("Names of the Tags in use, by name.")
+            .WithDescription("A Tag no Item carries (in any state) is left out.")
+            .Produces<string[]>();
 
         app.MapGet("/categories", async (OrganizerDb db) =>
             Results.Ok((await db.Categories.Select(c => new CategoryDto(c.Id, c.Name)).ToListAsync())

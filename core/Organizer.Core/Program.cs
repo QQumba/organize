@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Organizer.Core;
 
@@ -41,6 +42,8 @@ int Run()
     }
     builder.Services.AddDbContext<OrganizerDb>(o => 
         o.UseSqlite($"Data Source={config.DatabasePath}").AddInterceptors(new UnicodeFunctions()));
+    // Strict numbers: the API description then says "integer", not "integer or string".
+    builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
     builder.Services.AddApiDescription();
 
     var app = builder.Build();

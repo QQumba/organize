@@ -136,19 +136,57 @@
       }
     },
     "/api/items/{id}": {
-      "patch": {
+      "get": {
         "tags": [
           "Organizer.Core"
         ],
-        "summary": "Edit an Item.",
-        "description": "Send only the fields to change. An omitted field is unchanged; an explicit null clears it (text cannot be cleared). category must name an existing Category; tags replaces the Item's Tags; dueDate is yyyy-MM-dd.",
+        "summary": "Get one Item, in any state.",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
             "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Organizer.Core"
+        ],
+        "summary": "Edit an Item.",
+        "description": "Send only the fields to change. An omitted field is unchanged; an explicit null clears it (text cannot be cleared). Length limits: text 500, notes 10,000, Tag names 50 characters; only the fields sent are checked. category must name an existing Category; tags replaces the Item's Tags; dueDate is yyyy-MM-dd.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
               "type": "integer",
               "format": "int32"
             }
@@ -211,7 +249,6 @@
             "in": "path",
             "required": true,
             "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": "integer",
               "format": "int32"
             }
@@ -254,7 +291,6 @@
             "in": "path",
             "required": true,
             "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": "integer",
               "format": "int32"
             }
@@ -297,7 +333,6 @@
             "in": "path",
             "required": true,
             "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": "integer",
               "format": "int32"
             }
@@ -488,6 +523,102 @@
         }
       }
     },
+    "/api/categories/{id}": {
+      "patch": {
+        "tags": [
+          "Organizer.Core"
+        ],
+        "summary": "Rename a Category.",
+        "description": "Its Items keep the Category and show the new name. Name: at most 50 characters. Changing only the case of its own name is allowed.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tags": {
+      "get": {
+        "tags": [
+          "Organizer.Core"
+        ],
+        "summary": "Names of the Tags in use, by name.",
+        "description": "A Tag no Item carries (in any state) is left out.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/inbox": {
       "get": {
         "tags": [
@@ -542,6 +673,7 @@
         "type": "object",
         "properties": {
           "text": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -557,11 +689,7 @@
         "type": "object",
         "properties": {
           "id": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           },
           "name": {
@@ -576,6 +704,7 @@
         "type": "object",
         "properties": {
           "name": {
+            "maxLength": 50,
             "type": [
               "null",
               "string"
@@ -587,12 +716,14 @@
         "type": "object",
         "properties": {
           "text": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
             ]
           },
           "notes": {
+            "maxLength": 10000,
             "type": [
               "null",
               "string"
@@ -610,6 +741,7 @@
               "array"
             ],
             "items": {
+              "maxLength": 50,
               "type": "string"
             }
           },
@@ -656,16 +788,14 @@
           "important",
           "urgent",
           "state",
-          "createdAt"
+          "createdAt",
+          "doneAt",
+          "archivedAt"
         ],
         "type": "object",
         "properties": {
           "id": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
+            "type": "integer",
             "format": "int32"
           },
           "text": {
@@ -703,10 +833,29 @@
             "type": "boolean"
           },
           "state": {
+            "enum": [
+              "open",
+              "done",
+              "archived"
+            ],
             "type": "string"
           },
           "createdAt": {
             "type": "string",
+            "format": "date-time"
+          },
+          "doneAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "archivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
             "format": "date-time"
           }
         }
@@ -730,11 +879,9 @@
             ]
           },
           "status": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
-              "integer",
-              "string"
+              "integer"
             ],
             "format": "int32"
           },

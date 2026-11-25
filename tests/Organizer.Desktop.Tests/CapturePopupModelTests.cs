@@ -135,7 +135,7 @@ public class CapturePopupModelTests
     }
 
     private static ItemDto Item(int id, string text, DateOnly? due) =>
-        new(id, text, null, null, [], due, false, false, "open", DateTime.UtcNow);
+        new(id, text, null, null, [], due, false, false, "open", DateTime.UtcNow, null, null);
 
     private sealed class FakeApi : IInboxApi
     {
