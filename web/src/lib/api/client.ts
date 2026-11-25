@@ -11,7 +11,7 @@ export const api = createClient<paths>({ baseUrl: '', credentials: 'same-origin'
 const toLogin = once(async () => {
 	if (location.pathname === '/login') return;
 	// eslint-disable-next-line svelte/no-navigation-without-resolve -- app has no base path; the target is a checked same-origin path
-	await goto(loginUrl(location.pathname + location.search), { replaceState: true });
+	await goto(loginUrl(location.pathname + location.search), { replace: true });
 });
 
 // The one place that handles 401 (go to login) and an unreachable Core (banner).

@@ -30,7 +30,7 @@ export async function logout() {
 	}
 	checked = true;
 	// eslint-disable-next-line svelte/no-navigation-without-resolve -- app has no base path; the target is a checked same-origin path
-	await goto('/login', { replaceState: true });
+	await goto('/login', { replace: true });
 }
 
 /** Retry button of the banner: reloads the current page's data (never repeats a write). */

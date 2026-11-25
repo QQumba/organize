@@ -18,7 +18,7 @@
 			const { response, error: body } = await api.POST('/api/session', { body: { secret } });
 			if (response.ok) {
 				// eslint-disable-next-line svelte/no-navigation-without-resolve -- app has no base path; the target is a checked same-origin path
-				await goto(landingPath(page.url.searchParams.get('return')), { replaceState: true });
+				await goto(landingPath(page.url.searchParams.get('return')), { replace: true });
 			} else {
 				error = errorText({ response, error: body }, { wrongSecret: true });
 			}
