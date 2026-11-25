@@ -22,7 +22,9 @@ api.use({
 		else markReachable();
 		if (verdict === 'unauthorized') toLogin();
 	},
-	onError() {
+	onError({ error }) {
+		// A request cancelled on purpose (navigation, AbortSignal) says nothing about the Core.
+		if (error instanceof Error && error.name === 'AbortError') return;
 		markUnreachable();
 	}
 });

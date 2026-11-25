@@ -21,6 +21,7 @@ Only through the generated types and the `openapi-fetch` client in `#lib/api/cli
 ## Data pattern every screen follows
 
 - Load data in the SvelteKit `load` function in `+page.ts`, not in `$effect`.
+- Exception: the placeholder page `src/routes/(app)/+page.svelte` loads health in `$effect`; it goes away with the Inbox.
 - After a change (capture, done, archive, edit), refresh the lists with `invalidate`.
 - 401 and network errors are handled in one place, not per screen: the `openapi-fetch` middleware in `#lib/api/client.ts` (decisions in `api/guard.ts`). A 401 (except from `/api/session`) goes to `/login?return=<page>`, once for concurrent 401s; an unreachable Core (network error, 502/503/504) shows the `CoreBanner` (state in `coreStatus.svelte.ts`, rendered by the root layout) until the next successful response; Retry runs `invalidateAll()`. No offline mode.
 - The root layout `load` asks `GET /api/session` once per page load (`session.ts`; `logout()` lives there too). `returnPath.ts` validates the login `return` path.
