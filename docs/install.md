@@ -6,7 +6,7 @@ Windows 10/11, per user, no admin. Plain folders plus scripts; there is no insta
 
 - .NET 10 SDK and Node 24 or later (to build; Node is used only by `publish.ps1`, to build the web UI).
 - Running the result: the **ASP.NET Core 10 runtime** (Core) and the **.NET 10 Desktop Runtime** (tray app).
-- Building the CLI (Native AOT): the Visual Studio "Desktop development with C++" workload. The publish may print "'vswhere.exe' is not recognized" (it is not on `PATH`); this is harmless, the publish still finds Visual Studio and succeeds.
+- Building the CLI (Native AOT): the Visual Studio "Desktop development with C++" workload. `publish.ps1` adds the Visual Studio Installer folder (where `vswhere.exe` lives) to its own `PATH`, so it works from any shell; without `vswhere.exe` on `PATH` the link can fail with "'vswhere.exe' is not recognized" and exit code 123.
 
 ## Build
 

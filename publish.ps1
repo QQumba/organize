@@ -4,6 +4,13 @@
 # The CLI needs the Visual Studio "Desktop development with C++" workload for Native AOT.
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
+
+# The Native AOT build (CLI) finds Visual Studio through vswhere.exe; outside a Developer prompt it is not on PATH
+# and the link can fail. Add its fixed install folder for this process only.
+$vswhereDir = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer'
+if (-not (Get-Command vswhere.exe -ErrorAction SilentlyContinue) -and (Test-Path (Join-Path $vswhereDir 'vswhere.exe'))) {
+    $env:PATH = "$env:PATH;$vswhereDir"
+}
 $dist = Join-Path $root 'dist'
 
 # Node first, before any other step.
