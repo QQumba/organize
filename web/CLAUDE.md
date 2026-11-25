@@ -22,7 +22,9 @@ Only through the generated types and the `openapi-fetch` client in `#lib/api/cli
 
 - Load data in the SvelteKit `load` function in `+page.ts`, not in `$effect`.
 - After a change (capture, done, archive, edit), refresh the lists with `invalidate`.
-- 401 and network errors are handled in one place (shared load helper or the root layout), not per screen. A 401 goes to login; an unreachable Core shows a clear error (no offline mode).
+- 401 and network errors are handled in one place, not per screen: the `openapi-fetch` middleware in `#lib/api/client.ts` (decisions in `api/guard.ts`). A 401 (except from `/api/session`) goes to `/login?return=<page>`, once for concurrent 401s; an unreachable Core (network error, 502/503/504) shows the `CoreBanner` (state in `coreStatus.svelte.ts`, rendered by the root layout) until the next successful response; Retry runs `invalidateAll()`. No offline mode.
+- The root layout `load` asks `GET /api/session` once per page load (`session.ts`; `logout()` lives there too). `returnPath.ts` validates the login `return` path.
+- A failed call shows its error where it happened: `errorText(...)` (`#lib/errorText.ts`) turns a failed result (`{ response, error }` or `{ thrown }`) into text (problem-details `detail` for 400/409, "Can't reach the Core", "Something went wrong (status N)").
 - Show a loading indicator only when a load takes noticeably long (a short delay first), so quick loads do not flash.
 - State: local `$state` in the component; shared state only when two distant parts need it, in a `.svelte.ts` module. No state library.
 

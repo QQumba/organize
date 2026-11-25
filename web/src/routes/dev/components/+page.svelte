@@ -1,5 +1,10 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import CoreBanner from '#lib/components/CoreBanner.svelte';
+	import LoadingBar from '#lib/components/LoadingBar.svelte';
+
+	let showBanner = $state(false);
+	let showBar = $state(false);
 
 	// Component gallery: one section per component, with its variants and states.
 	// Rules: web/CLAUDE.md. Read this page before making a component; a component is not done
@@ -87,6 +92,30 @@
 			<a class="text-accent underline" href={resolve('/dev/components')}>a link</a>, the buttons and
 			inputs above.
 		</p>
+	</section>
+
+	<section class="space-y-2">
+		<h2 class="font-semibold">CoreBanner</h2>
+		<p class="text-xs text-text-muted">
+			Fixed at the top of every page when the Core is unreachable; Retry reloads the page's data.
+			Shown here by the toggle (it covers the top of the page).
+		</p>
+		<button class="btn btn-secondary" onclick={() => (showBanner = !showBanner)}>
+			{showBanner ? 'Hide' : 'Show'} banner
+		</button>
+		<CoreBanner visible={showBanner} onretry={() => void (showBanner = false)} />
+	</section>
+
+	<section class="space-y-2">
+		<h2 class="font-semibold">LoadingBar</h2>
+		<p class="text-xs text-text-muted">
+			A thin accent bar at the top; appears only after 300 ms of navigation. Shown here by the
+			toggle (forced loading, still after the delay).
+		</p>
+		<button class="btn btn-secondary" onclick={() => (showBar = !showBar)}>
+			{showBar ? 'Stop' : 'Start'} loading
+		</button>
+		<LoadingBar loading={showBar} />
 	</section>
 
 	<section class="space-y-2">
