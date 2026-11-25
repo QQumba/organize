@@ -21,12 +21,13 @@ Only through the generated types and the `openapi-fetch` client in `#lib/api/cli
 ## Data pattern every screen follows
 
 - Load data in the SvelteKit `load` function in `+page.ts`, not in `$effect`.
-- Exception: the placeholder page `src/routes/(app)/+page.svelte` loads health in `$effect`; it goes away with the Inbox.
 - After a change (capture, done, archive, edit), refresh the lists with `invalidate`.
 - 401 and network errors are handled in one place, not per screen: the `openapi-fetch` middleware in `#lib/api/client.ts` (decisions in `api/guard.ts`). A 401 (except from `/api/session`) goes to `/login?return=<page>`, once for concurrent 401s; an unreachable Core (network error, 502/503/504) shows the `CoreBanner` (state in `coreStatus.svelte.ts`, rendered by the root layout) until the next successful response; Retry runs `invalidateAll()`. No offline mode.
 - The root layout `load` asks `GET /api/session` once per page load (`session.ts`; `logout()` lives there too). `returnPath.ts` validates the login `return` path.
 - A failed call shows its error where it happened: `errorText(...)` (`#lib/errorText.ts`) turns a failed result (`{ response, error }` or `{ thrown }`) into text (problem-details `detail` for 400/409, "Can't reach the Core", "Something went wrong (status N)").
 - Show a loading indicator only when a load takes noticeably long (a short delay first), so quick loads do not flash.
+- The shell is `src/routes/(app)/+layout.svelte` (sidebar, header Capture line and search box; components beside it); `/login` is outside it. Unmatched URLs hit `(app)/[...path]` (throws 404) so `(app)/+error.svelte` shows "Page not found" inside the shell. Header Capture sends the text unchanged, then `invalidateAll()`; "Captured" with a link shows for 5 s.
+- Refresh on focus: the shell calls `invalidateAll()` when the tab or window becomes active (at most every 5 s; `focusRefresh.ts` decides). Off while the Core banner is up or `unsavedChanges.dirty` is set (`unsavedChanges.svelte.ts`: a form with unsaved changes calls `setUnsaved(true)` and clears it on save, reset and destroy). The user's switch is in `localStorage` (`focusRefresh.svelte.ts`).
 - State: local `$state` in the component; shared state only when two distant parts need it, in a `.svelte.ts` module. No state library.
 
 ## Theme and styling
@@ -61,7 +62,7 @@ Source: the rows prototype (`/dev/playground/rows`, iteration 4). The shared wid
 
 **Tag chip:** 1px `border` pill (`rounded-full`), 12px, `text-muted`.
 
-The shell layout (ATL-31) and the row anatomy (ATL-32) are starting points; an implementer may deviate with a good reason stated in the ticket comment.
+The row anatomy (ATL-32) is a starting point; an implementer may deviate with a good reason stated in the ticket comment.
 
 ## Playground
 
