@@ -70,6 +70,22 @@ function Install-WebDependencies {
     }
 }
 
+# Builds the projects one after the other, so two MSBuild processes never write the shared Contracts.dll at once
+# (the cause of CS2012 when both `dotnet run` built in parallel). Quiet: output is shown only on failure.
+# The projects are then started with `dotnet run --no-build`. Returns $true on success.
+function Build-DevProjects {
+    $projects = @('core/Organizer.Core') + $(if (-not $NoTray) { 'desktop/Organizer.Desktop' })
+    foreach ($project in $projects) {
+        $output = & dotnet build (Join-Path $PSScriptRoot $project) --nologo -v q 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Build of $project failed:"
+            $output | ForEach-Object { Write-Host $_ }
+            return $false
+        }
+    }
+    return $true
+}
+
 if ($Start) {
     function Test-PortListening([int]$port) {
         $null -ne (Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue)
@@ -97,6 +113,7 @@ if ($Start) {
         }
     }
 
+    if (-not (Build-DevProjects)) { exit 1 }
     if ($Web) { Install-WebDependencies }
     $logDir = Join-Path $ConfigDir 'logs'
     New-Item -ItemType Directory -Force $logDir | Out-Null
@@ -128,9 +145,9 @@ if ($Start) {
     }
 
     try {
-        Start-Detached 'core' 'dotnet' @('run', '--project', 'core/Organizer.Core', '--launch-profile', 'Dev') $PSScriptRoot
+        Start-Detached 'core' 'dotnet' @('run', '--no-build', '--project', 'core/Organizer.Core', '--launch-profile', 'Dev') $PSScriptRoot
         if (-not $NoTray) {
-            Start-Detached 'desktop' 'dotnet' @('run', '--project', 'desktop/Organizer.Desktop', '--', '--config', (Join-Path $ConfigDir 'desktop.json')) $PSScriptRoot
+            Start-Detached 'desktop' 'dotnet' @('run', '--no-build', '--project', 'desktop/Organizer.Desktop', '--', '--config', (Join-Path $ConfigDir 'desktop.json')) $PSScriptRoot
         }
         if ($Web) {
             Start-Detached 'vite' 'npm.cmd' @('run', 'dev', '--', '--port', "$vitePort", '--strictPort') (Join-Path $PSScriptRoot 'web')
@@ -168,9 +185,10 @@ $core = $null
 $desktop = $null
 $vite = $null
 try {
-    $core = Start-Process dotnet -ArgumentList 'run', '--project', 'core/Organizer.Core', '--launch-profile', 'Dev' -NoNewWindow -PassThru
+    if (-not (Build-DevProjects)) { exit 1 }
+    $core = Start-Process dotnet -ArgumentList 'run', '--no-build', '--project', 'core/Organizer.Core', '--launch-profile', 'Dev' -NoNewWindow -PassThru
     if (-not $NoTray) {
-        $desktop = Start-Process dotnet -ArgumentList 'run', '--project', 'desktop/Organizer.Desktop', '--', '--config', (Join-Path $ConfigDir 'desktop.json') -NoNewWindow -PassThru
+        $desktop = Start-Process dotnet -ArgumentList 'run', '--no-build', '--project', 'desktop/Organizer.Desktop', '--', '--config', (Join-Path $ConfigDir 'desktop.json') -NoNewWindow -PassThru
     }
     if ($Web) {
         Install-WebDependencies
