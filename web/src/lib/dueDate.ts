@@ -60,3 +60,20 @@ export function dueTooltip(due: string): string {
 	const weekday = weekdays[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
 	return `${weekday}, ${d} ${longMonths[m - 1]} ${y}`;
 }
+
+/** The local calendar date (`YYYY-MM-DD`) of a UTC date-time from the Core, such as `doneAt`. */
+export function localDateOf(dateTime: string): string {
+	// The Core sends UTC without a zone marker ("2026-11-25T23:48:14.07"); JS would read that as local.
+	const hasZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(dateTime);
+	return localIsoDate(new Date(hasZone ? dateTime : `${dateTime}Z`));
+}
+
+/** Label and tooltip for a Done or Archive row: "Done 12 Nov" / "Archived Yesterday", local date. */
+export function stampOf(
+	prefix: string,
+	dateTime: string,
+	today: Date
+): { label: string; title: string } {
+	const date = localDateOf(dateTime);
+	return { label: `${prefix} ${dueLabel(date, today)}`, title: dueTooltip(date) };
+}

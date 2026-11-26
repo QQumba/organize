@@ -12,6 +12,7 @@
 		overdueHighlight = false,
 		error = '',
 		today = new Date(),
+		stamp,
 		action
 	}: {
 		item: Item;
@@ -20,12 +21,15 @@
 		/** A failed action's message, shown on the row. */
 		error?: string;
 		today?: Date;
+		/** When the Item was done or archived (Done and Archive views), first in the bottom line. */
+		stamp?: { label: string; title: string };
 		action?: Snippet;
 	} = $props();
 
 	const overdue = $derived(overdueHighlight && isOverdue(item.dueDate, today));
 	const hasMeta = $derived(
-		item.important ||
+		!!stamp ||
+			item.important ||
 			item.urgent ||
 			item.dueDate !== null ||
 			item.tags.length > 0 ||
@@ -43,6 +47,9 @@
 		<a class="block truncate" href="/items/{item.id}" title={item.text}>{item.text}</a>
 		{#if hasMeta}
 			<div class="flex items-center gap-2 text-xs">
+				{#if stamp}
+					<span class="text-text-muted tabular-nums" title={stamp.title}>{stamp.label}</span>
+				{/if}
 				{#if item.important}
 					<span class="text-mark-important" title="Important" aria-label="Important">■</span>
 				{/if}

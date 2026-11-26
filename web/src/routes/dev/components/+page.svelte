@@ -3,7 +3,7 @@
 	import CoreBanner from '#lib/components/CoreBanner.svelte';
 	import ItemRow from '#lib/components/ItemRow.svelte';
 	import LoadingBar from '#lib/components/LoadingBar.svelte';
-	import { localIsoDate } from '#lib/dueDate.ts';
+	import { localIsoDate, stampOf } from '#lib/dueDate.ts';
 
 	let showBanner = $state(false);
 	let showBar = $state(false);
@@ -37,7 +37,7 @@
 			important: boolean;
 			urgent: boolean;
 		}>,
-		extra: { overdue?: boolean; action?: boolean; error?: string } = {}
+		extra: { overdue?: boolean; action?: boolean; error?: string; stamp?: string } = {}
 	) {
 		return {
 			item: {
@@ -57,7 +57,8 @@
 			},
 			overdue: extra.overdue ?? false,
 			action: extra.action ?? false,
-			error: extra.error ?? ''
+			error: extra.error ?? '',
+			stamp: extra.stamp ? stampOf(extra.stamp, today.toISOString(), today) : undefined
 		};
 	}
 	const rows = [
@@ -82,6 +83,11 @@
 			dueDate: dayOffset(2)
 		}),
 		sample({ text: 'With a done checkbox in the action slot' }, { action: true }),
+		sample(
+			{ text: 'Done view: stamp, Ukrainian Category', category: 'Робота', dueDate: dayOffset(-3) },
+			{ stamp: 'Done' }
+		),
+		sample({ text: 'Archive view: stamp alone' }, { stamp: 'Archived' }),
 		sample({ text: 'The action failed' }, { action: true, error: "Can't reach the Core" })
 	];
 	const buttons = [
@@ -186,14 +192,21 @@
 			The shared Item row (Inbox, Done, Archive, Search): 54px, one-line ellipsis title that links
 			to the Item, markers, due date, notes marker, Tag chips and Category. The per-view action is
 			the
-			<code>action</code> snippet (here a done checkbox). <code>overdueHighlight</code> is on only for
-			open Items (the Inbox). Rows: plain; Important and Urgent; overdue (highlight on); the same date
-			with highlight off; notes and Tags; a long title; Ukrainian text; with an action; with an action
-			error. Hover and Tab to see the hover and focus states.
+			<code>action</code> snippet (here a done checkbox). <code>overdueHighlight</code> is on only
+			for open Items (the Inbox). Rows: plain; Important and Urgent; overdue (highlight on); the
+			same date with highlight off; notes and Tags; a long title; Ukrainian text; with an action;
+			with an action error; Done and Archive stamps (<code>stamp</code>, before the markers). Hover
+			and Tab to see the hover and focus states.
 		</p>
 		<ul class="rounded-panel border border-border bg-surface-raised">
 			{#each rows as row (row.item.id)}
-				<ItemRow item={row.item} overdueHighlight={row.overdue} error={row.error} {today}>
+				<ItemRow
+					item={row.item}
+					overdueHighlight={row.overdue}
+					error={row.error}
+					stamp={row.stamp}
+					{today}
+				>
 					{#snippet action()}
 						{#if row.action}
 							<input type="checkbox" class="m-0 accent-accent" aria-label="Mark done" />
